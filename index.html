@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>首頁</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+  </script>
+</head>
+<body class="bg-gray-50 text-gray-800 transition-colors duration-300 dark:bg-gray-900 dark:text-white">
+  <div id="app" class="max-w-3xl mx-auto mt-5 p-6 text-center">
+    <div class="flex justify-center items-center bg-gray-100 py-4">
+        <div class="w-3/4">
+          <h1 class="text-3xl font-bold text-left">首頁</h1>
+          <ul class="list-disc mt-4 space-y-2 w-full text-left">
+            <li>
+              <a href="math.html" class="text-xl text-gray-500 hover:underline hover:text-[#09CEF6]">
+                數學運算練習
+              </a>
+            </li>
+            <!-- 可以在這裡新增其他的列表項目 -->
+          </ul>
+        </div>
+      </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.2.33/dist/vue.global.prod.js"></script>
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          operation: '+',
+          digitMin: 2,
+          digitMax: 2,
+          questionCount: 5,
+          questions: [],
+          started: false,
+          submitted: false,
+          timer: null,
+          startTime: null,
+          elapsedTime: 0,
+          darkMode: false,
+          history: []
+        };
+      },
+      computed: {
+        correctCount() {
+          return this.questions.filter(q => q.correct).length;
+        }
+      },
+      methods: {
+        generateNumber(digits) {
+          const min = Math.pow(10, digits - 1);
+          const max = Math.pow(10, digits) - 1;
+          return Math.floor(Math.random() * (max - min + 1)) + min;
+        },
+        createQuestion() {
+          let a = this.generateNumber(this.digitMin);
+          let b = this.generateNumber(this.digitMax);
+          const op = this.operation;
+
+          if (op === '/') {
+            while (b === 0) {
+              b = this.generateNumber(this.digitMax);
+            }
+            a = b * this.generateNumber(this.digitMin);
+          }
+
+          if (op === '-' && a < b) {
+            [a, b] = [b, a];
+          }
+
+          let answer;
+          switch (op) {
+            case '+': answer = a + b; break;
+            case '-': answer = a - b; break;
+            case '*': answer = a * b; break;
+            case '/': answer = a / b; break;
+          }
+
+          // 過濾答案為 0 或 1
+          if (answer === 0 || answer === 1) return this.createQuestion();
+
+          return { a, b, op, answer, userAnswer: null, correct: false };
+        },
+        startQuiz() {
+          if (this.questionCount < 3 || this.questionCount > 50) {
+            alert("題目數量需介於 3 到 50 題！");
+            return;
+          }
+          this.questions = Array.from({ length: this.questionCount }, () => this.createQuestion());
+          this.started = true;
+          this.submitted = false;
+          this.elapsedTime = 0;
+          this.startTimer();
+        },
+        endQuiz() {
+          this.questions.forEach(q => {
+            q.correct = Number(q.userAnswer) === q.answer;
+          });
+          this.submitted = true;
+          this.stopTimer();
+
+          const record = {
+            date: new Date().toLocaleString(),
+            operation: this.getOperationName(this.operation),
+            correct: this.correctCount,
+            total: this.questions.length,
+            time: this.elapsedTime
+          };
+          this.history.unshift(record);
+          this.history = this.history.slice(0, 10); // 保留最近 10 筆紀錄
+          localStorage.setItem('math_quiz_history', JSON.stringify(this.history));
+        },
+        restart() {
+          this.started = false;
+          this.questions = [];
+          this.submitted = false;
+        },
+        startTimer() {
+          this.startTime = Date.now();
+          this.timer = setInterval(() => {
+            this.elapsedTime = Math.floor((Date.now() - this.startTime) / 1000);
+          }, 1000);
+        },
+        stopTimer() {
+          clearInterval(this.timer);
+        },
+        formatTime(seconds) {
+          const mins = Math.floor(seconds / 60);
+          const secs = seconds % 60;
+          return `${mins} 分 ${secs} 秒`;
+        },
+        toggleDarkMode() {
+          this.darkMode = !this.darkMode;
+          document.documentElement.classList.toggle('dark', this.darkMode);
+          localStorage.setItem('math_quiz_dark_mode', this.darkMode ? '1' : '0');
+        },
+        printQuestions() {
+          const content = this.questions.map((q, i) => `${i + 1}. ${q.a} ${q.op} ${q.b} = ______`).join('\n');
+          const w = window.open('', '', 'width=600,height=800');
+          w.document.write('<pre>' + content + '</pre>');
+          w.print();
+          w.close();
+        },
+        getOperationName(op) {
+          return { '+': '加法', '-': '減法', '*': '乘法', '/': '除法' }[op] || op;
+        }
+      },
+      mounted() {
+        const dark = localStorage.getItem('math_quiz_dark_mode') === '1';
+        this.darkMode = dark;
+        document.documentElement.classList.toggle('dark', dark);
+
+        const savedHistory = localStorage.getItem('math_quiz_history');
+        if (savedHistory) {
+          this.history = JSON.parse(savedHistory);
+        }
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
