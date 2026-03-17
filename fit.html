@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>減脂助理系統 - 歷史足跡優化版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2D6A4F',
+                        'primary-dark': '#1B4332',
+                        accent: '#52B788',
+                        danger: '#E07A5F',
+                        oatmeal: '#F9F7F2',
+                        moss: '#6B705C'
+                    },
+                    borderRadius: {
+                        '3xl': '24px',
+                        '4xl': '32px'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: "PingFang TC", "Heiti TC", "Microsoft JhengHei", sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .page-fade { animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .chart-container { position: relative; height: 280px; width: 100%; }
+        .tab-active { color: #2D6A4F; border-bottom: 2px solid #2D6A4F; }
+        input:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        /* 展開動畫 */
+        .expandable-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.2s ease;
+            opacity: 0;
+        }
+        .expandable-content.show {
+            max-height: 1000px;
+            opacity: 1;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-oatmeal text-primary-dark min-h-screen pb-32">
+
+<!-- 彈出視窗 (Modal) -->
+<div id="custom-modal-overlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1000] hidden items-center justify-center p-4">
+    <div class="bg-oatmeal w-full max-sm:max-w-xs max-w-sm rounded-4xl p-8 shadow-2xl text-center page-fade">
+        <h3 class="text-xl font-bold mb-4" id="modal-title">確認操作</h3>
+        <div id="modal-body-container" class="mb-8 text-left">
+            <p class="text-moss" id="modal-body">內容預設</p>
+        </div>
+        <div class="space-y-3">
+            <button class="w-full py-4 bg-primary text-white rounded-2xl font-bold shadow-lg active:scale-95 transition-transform" id="modal-confirm-btn">確認執行</button>
+            <button class="w-full py-4 bg-gray-200 text-primary-dark rounded-2xl font-bold active:scale-95 transition-transform" id="modal-cancel-btn" onclick="closeModal()">返回</button>
+        </div>
+    </div>
+</div>
+
+<div class="container mx-auto max-w-4xl px-4 py-8">
+    
+    <!-- 頁面 1: 儀表板 -->
+    <div id="page-dashboard" class="page-fade space-y-6">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl md:text-4xl font-black text-primary inline-block py-1">🌿 減脂日誌</h2>
+        </div>
+        
+        <div id="active-plan-content" class="space-y-6">
+            <!-- 進度卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-black/5 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold mb-1">本階段旅程</h3>
+                        <div id="plan-info" class="text-[10px] text-moss mb-4 font-medium italic text-primary/70 font-bold italic">載入中...</div>
+                        <div class="h-3 w-full bg-gray-100 rounded-full overflow-hidden mb-3">
+                            <div id="progress-bar" class="h-full bg-gradient-to-r from-primary to-accent transition-all duration-1000 ease-out" style="width: 0%"></div>
+                        </div>
+                        <div id="day-counter" class="flex justify-between text-sm font-bold">
+                            <span>第 0 天</span><span class="text-moss">目標 56 天</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-black/5">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold">目前數據 vs 目標</h3>
+                        <span id="overall-progress-badge" class="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">進度 0%</span>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-xs font-bold mb-1">
+                                <span class="flex items-center gap-1">體重 <span id="current-w-display" class="text-primary font-black">--</span> / <span id="target-w-val">--</span>kg</span>
+                                <span id="diff-w-val" class="text-primary text-[10px]">--</span>
+                            </div>
+                            <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                                <div id="weight-progress-bar" class="h-full bg-primary transition-all duration-700" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs font-bold mb-1">
+                                <span class="flex items-center gap-1">體脂 <span id="current-f-display" class="text-accent font-black">--</span> / <span id="target-f-val">--</span>%</span>
+                                <span id="diff-f-val" class="text-accent text-[10px]">--</span>
+                            </div>
+                            <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                                <div id="fat-progress-bar" class="h-full bg-accent transition-all duration-700" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主圖表 -->
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-black/5">
+                <h3 class="text-lg font-bold mb-4">趨勢追蹤</h3>
+                <div class="chart-container">
+                    <canvas id="chart-main"></canvas>
+                </div>
+            </div>
+
+            <!-- 次要圖表切換 -->
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-black/5">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <h3 class="text-lg font-bold">進階指標</h3>
+                    <div class="flex bg-oatmeal p-1 rounded-xl text-[10px] font-black w-full sm:w-auto">
+                        <button onclick="switchSecondaryChart('visceral')" id="tab-v" class="flex-1 px-3 py-2 rounded-lg transition-all tab-active">內臟脂肪</button>
+                        <button onclick="switchSecondaryChart('muscle')" id="tab-m" class="flex-1 px-3 py-2 rounded-lg transition-all text-moss">骨骼肌率</button>
+                        <button onclick="switchSecondaryChart('waist')" id="tab-w" class="flex-1 px-3 py-2 rounded-lg transition-all text-moss">腰圍</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chart-secondary"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="no-plan-dashboard" class="hidden text-center py-24 text-moss text-lg font-medium italic">
+            🌿 準備好開始了嗎？請到「旅程」分頁開啟您的計畫。
+        </div>
+    </div>
+
+    <!-- 頁面 2: 數據紀錄 -->
+    <div id="page-logs" class="page-fade hidden space-y-6">
+        <h2 class="text-3xl font-black text-primary">⚖️ 數據紀錄</h2>
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+            <div id="log-form-container" class="md:col-span-2 space-y-4">
+                <div id="form-card" class="bg-white p-6 rounded-3xl shadow-sm border border-black/5 space-y-4 h-fit">
+                    <div class="flex justify-between items-center">
+                        <h3 id="form-title" class="text-lg font-bold">紀錄數值</h3>
+                        <span id="form-badge" class="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">新紀錄</span>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-moss mb-1">日期</label>
+                        <input type="date" id="log-date" onchange="validateLogDate()" class="w-full p-3 rounded-xl border-2 border-gray-50 bg-gray-50/50 outline-none transition-all text-sm">
+                        <p id="date-limit-hint" class="text-[10px] mt-1 font-bold italic"></p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-primary mb-1">體重 (kg)</label>
+                            <input type="number" id="log-w" step="0.1" class="w-full p-3 rounded-xl border-2 border-primary/10 bg-white outline-none focus:border-primary text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-accent mb-1">體脂 (%)</label>
+                            <input type="number" id="log-f" step="0.1" class="w-full p-3 rounded-xl border-2 border-accent/10 bg-white outline-none focus:border-accent text-sm">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="block text-[10px] font-bold text-moss mb-1">內臟脂肪</label><input type="number" id="log-v" step="0.5" class="w-full p-3 rounded-xl border-2 border-gray-50 text-sm"></div>
+                        <div><label class="block text-[10px] font-bold text-moss mb-1">骨骼肌率</label><input type="number" id="log-m" step="0.1" class="w-full p-3 rounded-xl border-2 border-gray-50 text-sm"></div>
+                    </div>
+                    <div><label class="block text-[10px] font-bold text-moss mb-1">腰圍 (cm)</label><input type="number" id="log-waist" step="0.1" class="w-full p-3 rounded-xl border-2 border-gray-50 text-sm"></div>
+                    <button class="w-full py-4 bg-primary text-white rounded-2xl font-bold shadow-md active:scale-95 transition-all disabled:bg-gray-300 disabled:shadow-none" id="save-btn" onclick="addLog()">儲存紀錄</button>
+                    <button class="w-full py-3 bg-gray-100 text-primary-dark rounded-2xl font-bold hidden" id="cancel-btn" onclick="resetForm()">取消編輯</button>
+                </div>
+                <div id="no-plan-log-hint" class="hidden bg-white/50 p-8 rounded-3xl border-2 border-dashed border-gray-200 text-center space-y-4">
+                    <p class="text-sm text-moss font-bold italic">⛳ 請先建立「旅程」<br>才能開始紀錄每日數據喔！</p>
+                    <button onclick="switchPage('goals')" class="text-xs bg-primary text-white px-4 py-2 rounded-xl font-bold">前往設定旅程</button>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-black/5 md:col-span-3 overflow-hidden h-fit">
+                <div class="overflow-x-auto scrollbar-hide">
+                    <table class="w-full text-sm min-w-[500px]">
+                        <thead class="text-moss border-b-2 border-oatmeal">
+                            <tr>
+                                <th class="text-left py-3 font-bold">日期</th>
+                                <th class="text-left py-3 font-bold">體重/體脂</th>
+                                <th class="text-left py-3 font-bold">內臟/肌</th>
+                                <th class="text-left py-3 font-bold">腰圍</th>
+                                <th class="py-3"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="log-table-body" class="divide-y divide-oatmeal"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 頁面 3: 旅程管理 -->
+    <div id="page-goals" class="page-fade hidden space-y-6">
+        <h2 class="text-3xl font-black text-primary">⛳ 旅程管理</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-black/5 space-y-6 relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <h3 class="text-lg font-bold">當前旅程</h3>
+                    <button id="active-plan-edit-btn" onclick="handleActivePlanEdit()" class="hidden text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-xl font-bold">編輯計畫</button>
+                </div>
+                <div id="current-plan-desc" class="p-6 border-2 border-dashed border-gray-100 rounded-3xl min-h-[140px] flex items-center justify-center italic text-moss font-bold">尚無旅程</div>
+                <button class="w-full py-4 bg-primary text-white rounded-2xl font-bold shadow-lg active:scale-95 transition-all" id="btn-new-plan" onclick="handleNewPlanClick()">開啟新旅程</button>
+            </div>
+
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-black/5 space-y-6">
+                <h3 class="text-lg font-bold">資料管理</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <button class="p-4 border-2 border-gray-50 bg-gray-50/30 rounded-2xl font-bold text-xs" onclick="exportJSON()">💾 備份資料</button>
+                    <button class="p-4 border-2 border-gray-50 bg-gray-50/30 rounded-2xl font-bold text-xs" onclick="document.getElementById('file-import').click()">📥 還原資料</button>
+                    <input type="file" id="file-import" class="hidden" accept=".json" onchange="importJSON(event)">
+                </div>
+                <button class="w-full py-3 border-2 border-danger/20 text-danger rounded-xl text-[10px] font-bold" onclick="confirmClearAll()">🗑️ 清空所有數據</button>
+            </div>
+            <div class="md:col-span-2">
+                <h3 class="text-lg font-bold ml-2 mb-4">歷史足跡</h3>
+                <div id="history-list" class="space-y-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-4xl flex justify-around p-3 z-50">
+    <button class="nav-item flex-1 flex flex-col items-center gap-1 text-primary" onclick="switchPage('dashboard')">
+        <span class="text-2xl">🌿</span><span class="text-[10px] font-black">儀表板</span>
+    </button>
+    <button class="nav-item flex-1 flex flex-col items-center gap-1 text-moss/50" onclick="switchPage('logs')">
+        <span class="text-2xl">⚖️</span><span class="text-[10px] font-bold">紀錄</span>
+    </button>
+    <button class="nav-item flex-1 flex flex-col items-center gap-1 text-moss/50" onclick="switchPage('goals')">
+        <span class="text-2xl">⛳</span><span class="text-[10px] font-bold">旅程</span>
+    </button>
+</nav>
+
+<script>
+let appData = { plans: [] };
+let charts = { main: null, secondary: null };
+let currentSecondaryType = 'visceral';
+let isEditingMode = false;
+
+function getDayOffset(dateStr, startStr) {
+    const d = new Date(dateStr); d.setHours(0,0,0,0);
+    const s = new Date(startStr); s.setHours(0,0,0,0);
+    return Math.round((d - s) / 86400000);
+}
+
+function openModal(title, content, confirmCallback, isHtml = false) {
+    document.getElementById('modal-title').innerText = title;
+    const container = document.getElementById('modal-body-container');
+    if (isHtml) container.innerHTML = content; else container.innerHTML = `<p class="text-moss text-sm">${content}</p>`;
+    const confirmBtn = document.getElementById('modal-confirm-btn');
+    confirmBtn.onclick = () => { confirmCallback(); closeModal(); };
+    document.getElementById('custom-modal-overlay').classList.replace('hidden', 'flex');
+}
+function closeModal() { document.getElementById('custom-modal-overlay').classList.replace('flex', 'hidden'); }
+
+function init() {
+    const saved = localStorage.getItem('fatLossAppData');
+    if (saved) appData = JSON.parse(saved);
+    updateUI();
+}
+function saveData() { localStorage.setItem('fatLossAppData', JSON.stringify(appData)); }
+
+function switchPage(pageId) {
+    ['dashboard', 'logs', 'goals'].forEach(id => document.getElementById(`page-${id}`).classList.add('hidden'));
+    document.getElementById(`page-${pageId}`).classList.remove('hidden');
+    const navItems = document.querySelectorAll('.nav-item');
+    const pageIdx = { dashboard: 0, logs: 1, goals: 2 };
+    navItems.forEach((btn, idx) => {
+        if (idx === pageIdx[pageId]) { btn.classList.add('text-primary'); btn.classList.remove('text-moss/50'); }
+        else { btn.classList.remove('text-primary'); btn.classList.add('text-moss/50'); }
+    });
+    if(pageId === 'logs') resetForm();
+    updateUI();
+}
+
+function getActivePlan() { return appData.plans.find(p => p.active === true); }
+
+function handleActivePlanEdit() {
+    const plan = getActivePlan();
+    if (plan) setupNewPlan(plan);
+}
+
+function handleNewPlanClick() {
+    const plan = getActivePlan();
+    if (plan) {
+        openModal("結束當前旅程？", "目前已有一個正在進行中的計畫。開啟新旅程將會結束並歸檔目前的計畫。是否要繼續？", () => {
+            finishActivePlanAndStartNew();
+        });
+    } else {
+        setupNewPlan();
+    }
+}
+
+function finishActivePlanAndStartNew() {
+    appData.plans.forEach(p => p.active = false);
+    saveData();
+    updateUI();
+    setTimeout(() => setupNewPlan(), 300);
+}
+
+function setupNewPlan(editingPlan = null) {
+    const isEditing = !!editingPlan;
+    const startStr = isEditing ? editingPlan.start : new Date().toISOString().split('T')[0];
+    const endStr = isEditing ? editingPlan.end : (() => { const d = new Date(); d.setDate(d.getDate() + 55); return d.toISOString().split('T')[0]; })();
+    const sw = isEditing ? editingPlan.startW : '';
+    const tw = isEditing ? editingPlan.targetW : '';
+    const tf = isEditing ? (editingPlan.targetF || '') : '';
+    const sf = isEditing ? (editingPlan.startF || '') : ''; 
+
+    const html = `
+        <div class="space-y-4 text-left">
+            <div class="grid grid-cols-2 gap-3">
+                <div><label class="text-[10px] font-bold">開始日期</label><input type="date" id="new-plan-start" value="${startStr}" class="w-full p-3 border-2 rounded-xl text-sm"></div>
+                <div><label class="text-[10px] font-bold">目標日期</label><input type="date" id="new-plan-end" value="${endStr}" class="w-full p-3 border-2 rounded-xl text-sm"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div><label class="text-[10px] font-bold">起始體重</label><input type="number" id="new-plan-sw" value="${sw}" class="w-full p-3 border-2 rounded-xl"></div>
+                <div><label class="text-[10px] font-bold">起始體脂(選填)</label><input type="number" id="new-plan-sf" value="${sf}" class="w-full p-3 border-2 rounded-xl"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div><label class="text-[10px] font-bold">目標體重</label><input type="number" id="new-plan-tw" value="${tw}" class="w-full p-3 border-2 rounded-xl"></div>
+                <div><label class="text-[10px] font-bold">目標體脂</label><input type="number" id="new-plan-tf" value="${tf}" class="w-full p-3 border-2 rounded-xl"></div>
+            </div>
+        </div>
+    `;
+
+    openModal(isEditing ? "編輯旅程" : "設定新旅程", html, () => {
+        const start = document.getElementById('new-plan-start').value;
+        const end = document.getElementById('new-plan-end').value;
+        const nsw = parseFloat(document.getElementById('new-plan-sw').value);
+        const nsf = parseFloat(document.getElementById('new-plan-sf').value) || 0;
+        const ntw = parseFloat(document.getElementById('new-plan-tw').value);
+        const ntf = parseFloat(document.getElementById('new-plan-tf').value) || 0;
+        if (!start || !end || isNaN(nsw)) return;
+
+        if (isEditing) {
+            const idx = appData.plans.findIndex(p => p.id === editingPlan.id);
+            if (idx > -1) { Object.assign(appData.plans[idx], { start, end, startW: nsw, startF: nsf, targetW: ntw, targetF: ntf }); }
+        } else {
+            appData.plans.forEach(p => p.active = false);
+            appData.plans.push({ id: Date.now(), start, end, startW: nsw, startF: nsf, targetW: ntw, targetF: ntf, logs: [], active: true });
+        }
+        saveData(); updateUI();
+    }, true);
+}
+
+function validateLogDate() {
+    const plan = getActivePlan(); 
+    const dateInput = document.getElementById('log-date');
+    const saveBtn = document.getElementById('save-btn');
+    const hint = document.getElementById('date-limit-hint');
+    if (!plan) { saveBtn.disabled = true; return; }
+    const selected = dateInput.value;
+    const today = new Date().toISOString().split('T')[0];
+    if (selected > today) { hint.innerText = "⚠️ 不能預知未來喔！"; hint.className = "text-[10px] mt-1 text-danger"; saveBtn.disabled = true; return; }
+    if (selected < plan.start || selected > plan.end) { hint.innerText = `❌ 不在計畫內 (${plan.start}~${plan.end})`; hint.className = "text-[10px] mt-1 text-danger"; saveBtn.disabled = true; return; }
+    hint.innerText = "✅ 日期符合計畫範圍"; hint.className = "text-[10px] mt-1 text-primary"; saveBtn.disabled = false;
+}
+
+function addLog() {
+    const plan = getActivePlan(); if (!plan) return;
+    const date = document.getElementById('log-date').value;
+    const w = parseFloat(document.getElementById('log-w').value);
+    const f = parseFloat(document.getElementById('log-f').value) || 0;
+    const v = parseFloat(document.getElementById('log-v').value) || 0;
+    const m = parseFloat(document.getElementById('log-m').value) || 0;
+    const waist = parseFloat(document.getElementById('log-waist').value) || 0;
+    if(!date || isNaN(w)) return;
+    const log = { date, w, f, v, m, waist };
+    const idx = plan.logs.findIndex(l => l.date === date);
+    if(idx > -1) plan.logs[idx] = log; else plan.logs.push(log);
+    plan.logs.sort((a,b) => new Date(b.date) - new Date(a.date));
+    saveData(); resetForm(); updateUI();
+}
+
+function resetForm() {
+    isEditingMode = false;
+    document.getElementById('log-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('log-date').disabled = false;
+    ['log-w', 'log-f', 'log-v', 'log-m', 'log-waist'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('cancel-btn').classList.add('hidden');
+    validateLogDate();
+}
+
+function editLog(date) {
+    const plan = getActivePlan(); if (!plan) return;
+    const log = plan.logs.find(l => l.date === date);
+    if(log) {
+        isEditingMode = true;
+        document.getElementById('log-date').value = log.date;
+        document.getElementById('log-date').disabled = true;
+        document.getElementById('log-w').value = log.w;
+        document.getElementById('log-f').value = log.f || 0;
+        document.getElementById('log-v').value = log.v || 0;
+        document.getElementById('log-m').value = log.m || 0;
+        document.getElementById('log-waist').value = log.waist || 0;
+        document.getElementById('cancel-btn').classList.remove('hidden');
+        document.getElementById('form-card').scrollIntoView({behavior:'smooth'});
+        validateLogDate();
+    }
+}
+
+function updateUI() {
+    const plan = getActivePlan();
+    const hasActive = !!plan;
+    
+    document.getElementById('active-plan-content').style.display = hasActive ? 'block' : 'none';
+    document.getElementById('no-plan-dashboard').style.display = hasActive ? 'none' : 'block';
+    
+    const formCard = document.getElementById('form-card');
+    const noPlanHint = document.getElementById('no-plan-log-hint');
+    if (hasActive) { formCard.classList.remove('hidden'); noPlanHint.classList.add('hidden'); } 
+    else { formCard.classList.add('hidden'); noPlanHint.classList.remove('hidden'); }
+    
+    if (hasActive) {
+        const start = new Date(plan.start); const end = new Date(plan.end);
+        const today = new Date(); today.setHours(0,0,0,0);
+        const totalDays = Math.max(1, Math.round((end - start) / 86400000));
+        const elapsedDays = Math.max(0, Math.round((today - start) / 86400000));
+        
+        document.getElementById('plan-info').innerText = `${plan.start} ~ ${plan.end}`;
+        document.getElementById('progress-bar').style.width = Math.min((elapsedDays/totalDays)*100, 100) + '%';
+        document.getElementById('day-counter').innerHTML = `<span>第 ${elapsedDays} 天</span><span class="text-moss font-medium">總計 ${totalDays} 天</span>`;
+        
+        const latest = plan.logs.length > 0 ? plan.logs[0] : { w: plan.startW, f: plan.startF || 0 };
+        const startW = plan.startW;
+        const targetW = plan.targetW;
+        const currentW = latest.w;
+        
+        let wProgress = 0;
+        if (startW !== targetW) {
+            wProgress = ((startW - currentW) / (startW - targetW)) * 100;
+        }
+        document.getElementById('weight-progress-bar').style.width = Math.max(0, Math.min(100, wProgress)) + '%';
+        document.getElementById('current-w-display').innerText = currentW;
+        document.getElementById('target-w-val').innerText = targetW;
+        
+        const diffW = (currentW - targetW).toFixed(1);
+        document.getElementById('diff-w-val').innerText = diffW <= 0 ? '🏁 已達成' : `還差 ${diffW}kg`;
+
+        const startF = plan.startF || (plan.logs.length > 0 ? plan.logs[plan.logs.length-1].f : 0) || 30; 
+        const targetF = plan.targetF;
+        const currentF = latest.f || 0;
+        let fProgress = 0;
+        if (startF !== targetF && currentF !== 0) {
+            fProgress = ((startF - currentF) / (startF - targetF)) * 100;
+        }
+        document.getElementById('fat-progress-bar').style.width = Math.max(0, Math.min(100, fProgress)) + '%';
+        document.getElementById('current-f-display').innerText = currentF || '--';
+        document.getElementById('target-f-val').innerText = targetF;
+        
+        const diffF = (currentF - targetF).toFixed(1);
+        document.getElementById('diff-f-val').innerText = (currentF === 0) ? '--' : (diffF <= 0 ? '🏁 已達成' : `還差 ${diffF}%`);
+
+        const overall = Math.floor(Math.max(0, wProgress));
+        document.getElementById('overall-progress-badge').innerText = `達成度 ${overall}%`;
+
+        const sortedAsc = [...plan.logs].sort((a,b) => new Date(a.date) - new Date(b.date));
+        renderCharts(sortedAsc, plan.start);
+        updateLogTable(plan);
+        document.getElementById('current-plan-desc').innerHTML = `
+            <div class="text-center">
+                <div class="font-bold text-primary text-lg">🌱 計畫進行中</div>
+                <div class="text-[11px] text-moss mt-1">${plan.start} ~ ${plan.end}</div>
+                <div class="mt-4 grid grid-cols-2 gap-2 text-[10px]">
+                    <div class="bg-oatmeal p-2 rounded-xl border border-primary/5">起始: ${plan.startW}kg</div>
+                    <div class="bg-oatmeal p-2 rounded-xl border border-primary/5">目標: ${plan.targetW}kg</div>
+                </div>
+            </div>
+        `;
+        document.getElementById('active-plan-edit-btn').classList.remove('hidden');
+    } else {
+        document.getElementById('log-table-body').innerHTML = '';
+        document.getElementById('current-plan-desc').innerHTML = `
+            <div class="p-6 border-2 border-dashed border-gray-100 rounded-3xl min-h-[140px] flex items-center justify-center italic text-moss font-bold">尚無旅程</div>
+        `;
+        document.getElementById('active-plan-edit-btn').classList.add('hidden');
+    }
+    updateHistoryList();
+}
+
+function renderCharts(logs, planStart) {
+    const ctxMain = document.getElementById('chart-main').getContext('2d');
+    if (charts.main) charts.main.destroy();
+
+    charts.main = new Chart(ctxMain, {
+        type: 'line',
+        data: {
+            datasets: [
+                { label: '體重', data: logs.map(l => ({ x: getDayOffset(l.date, planStart), y: l.w })), borderColor: '#2D6A4F', backgroundColor: '#2D6A4F22', fill: true, tension: 0.3, yAxisID: 'y' },
+                { label: '體脂', data: logs.map(l => ({ x: getDayOffset(l.date, planStart), y: l.f || null })), borderColor: '#52B788', tension: 0.3, yAxisID: 'y1' }
+            ]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            interaction: { mode: 'index', intersect: false },
+            scales: { 
+                x: { 
+                    type: 'linear', 
+                    position: 'bottom',
+                    ticks: {
+                        stepSize: 1,
+                        callback: function(value) { return '第 ' + value + ' 天'; },
+                        font: { size: 10, weight: 'bold' }
+                    },
+                    grid: { display: false }
+                }, 
+                y: { 
+                    title: { display: true, text: '體重 (kg)', font: { size: 10 } },
+                    ticks: { font: { size: 10 } }
+                }, 
+                y1: { 
+                    position: 'right', 
+                    grid: { drawOnChartArea: false }, 
+                    title: { display: true, text: '體脂 (%)', font: { size: 10 } },
+                    ticks: { font: { size: 10 } }
+                } 
+            },
+            plugins: {
+                legend: { labels: { usePointStyle: true, font: { size: 11, weight: 'bold' } } }
+            }
+        }
+    });
+
+    const ctxSec = document.getElementById('chart-secondary').getContext('2d');
+    if (charts.secondary) charts.secondary.destroy();
+    let config = { label: '內臟脂肪', color: '#E07A5F', key: 'v' };
+    if(currentSecondaryType === 'muscle') config = { label: '骨骼肌率', color: '#3D5A80', key: 'm' };
+    if(currentSecondaryType === 'waist') config = { label: '腰圍', color: '#6B705C', key: 'waist' };
+    
+    charts.secondary = new Chart(ctxSec, {
+        type: 'line',
+        data: { datasets: [{ label: config.label, data: logs.map(l => ({ x: getDayOffset(l.date, planStart), y: l[config.key] || null })).filter(d => d.y !== null), borderColor: config.color, tension: 0.3 }] },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            scales: { 
+                x: { 
+                    type: 'linear',
+                    ticks: {
+                        stepSize: 1,
+                        callback: function(value) { return '第 ' + value + ' 天'; },
+                        font: { size: 10 }
+                    }
+                } 
+            } 
+        }
+    });
+}
+
+function switchSecondaryChart(type) {
+    currentSecondaryType = type;
+    ['tab-v', 'tab-m', 'tab-w'].forEach(id => document.getElementById(id).classList.remove('tab-active', 'text-moss'));
+    document.getElementById(type === 'visceral' ? 'tab-v' : (type === 'muscle' ? 'tab-m' : 'tab-w')).classList.add('tab-active');
+    updateUI();
+}
+
+function updateLogTable(plan) {
+    const tbody = document.getElementById('log-table-body');
+    tbody.innerHTML = plan.logs.map(l => `
+        <tr class="hover:bg-oatmeal/50 transition-colors">
+            <td class="py-4 font-bold text-primary-dark">${l.date.split('-').slice(1).join('/')}</td>
+            <td class="py-4"><div>${l.w}kg</div><div class="text-[10px] text-accent font-bold">${l.f || '--'}%</div></td>
+            <td class="py-4 text-[11px] text-moss font-medium"><div>內:${l.v||'-'}</div><div>肌:${l.m||'-'}%</div></td>
+            <td class="py-4 text-moss">${l.waist || '--'}cm</td>
+            <td class="py-4 text-right"><button class="text-accent font-black hover:scale-110 transition-transform" onclick="editLog('${l.date}')">修改</button></td>
+        </tr>
+    `).join('');
+}
+
+// 修改：優化歷史清單更新，增加「看紀錄」功能
+function updateHistoryList() {
+    const list = document.getElementById('history-list');
+    const history = appData.plans.filter(p => !p.active).sort((a,b) => b.id - a.id);
+    if (history.length === 0) { list.innerHTML = '<p class="text-center text-moss text-xs italic py-8">尚無歷史腳印</p>'; return; }
+    
+    list.innerHTML = history.map(p => {
+        // 生成歷史紀錄表格 HTML
+        const tableHtml = p.logs.length > 0 ? `
+            <div class="mt-4 border-t border-oatmeal pt-4 overflow-x-auto scrollbar-hide">
+                <table class="w-full text-[10px] text-left">
+                    <thead>
+                        <tr class="text-moss border-b border-oatmeal">
+                            <th class="pb-2 font-bold">日期</th>
+                            <th class="pb-2 font-bold">體重/脂</th>
+                            <th class="pb-2 font-bold">內臟/肌</th>
+                            <th class="pb-2 font-bold">腰圍</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-oatmeal/50">
+                        ${p.logs.map(l => `
+                            <tr>
+                                <td class="py-2 font-medium">${l.date.split('-').slice(1).join('/')}</td>
+                                <td class="py-2">${l.w}kg / ${l.f || '-'}%</td>
+                                <td class="py-2">${l.v || '-'} / ${l.m || '-'}%</td>
+                                <td class="py-2">${l.waist || '-'}cm</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        ` : `<p class="text-[10px] text-moss italic mt-4 text-center">此計畫無數據紀錄</p>`;
+
+        return `
+            <div class="bg-white p-5 rounded-3xl border border-black/5 shadow-sm transition-all duration-300">
+                <div class="flex justify-between items-center">
+                    <div class="flex-1 min-w-0 pr-4">
+                        <div class="font-bold text-sm text-primary truncate">🗓️ ${p.start} ~ ${p.end}</div>
+                        <div class="text-[10px] text-moss font-bold mt-1">紀錄: ${p.logs.length} 筆 | 目標: ${p.targetW}kg</div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button onclick="toggleHistoryLogs(${p.id})" id="toggle-btn-${p.id}" class="bg-primary/5 text-primary px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-primary/10 transition-colors">看紀錄</button>
+                        <button onclick="setupNewPlan(appData.plans.find(x=>x.id===${p.id}))" class="bg-accent/10 text-accent px-3 py-1.5 rounded-lg font-bold text-xs">編輯</button>
+                        <button onclick="confirmDeleteHistory(${p.id})" class="bg-danger/10 text-danger px-3 py-1.5 rounded-lg font-bold text-xs">刪除</button>
+                    </div>
+                </div>
+                <!-- 隱藏的展開區域 -->
+                <div id="logs-container-${p.id}" class="expandable-content">
+                    ${tableHtml}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// 新增：切換歷史紀錄展開狀態
+function toggleHistoryLogs(id) {
+    const container = document.getElementById(`logs-container-${id}`);
+    const btn = document.getElementById(`toggle-btn-${id}`);
+    const isShowing = container.classList.contains('show');
+    
+    // 先關閉所有其他已展開的（選擇性，若想保持同時展開多個可註解此段）
+    // document.querySelectorAll('.expandable-content').forEach(el => el.classList.remove('show'));
+    // document.querySelectorAll('[id^="toggle-btn-"]').forEach(el => el.innerText = '看紀錄');
+
+    if (isShowing) {
+        container.classList.remove('show');
+        btn.innerText = '看紀錄';
+        btn.classList.replace('bg-primary/20', 'bg-primary/5');
+    } else {
+        container.classList.add('show');
+        btn.innerText = '收合';
+        btn.classList.replace('bg-primary/5', 'bg-primary/20');
+    }
+}
+
+function confirmDeleteHistory(id) {
+    openModal("刪除計畫", "確定要永久刪除此段歷史紀錄嗎？", () => { appData.plans = appData.plans.filter(p => p.id !== id); saveData(); updateUI(); });
+}
+
+function exportJSON() {
+    const blob = new Blob([JSON.stringify(appData)], {type:"application/json"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = `減脂備份_${new Date().toISOString().split('T')[0]}.json`; a.click();
+}
+function importJSON(e) {
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => { try { appData = JSON.parse(ev.target.result); saveData(); updateUI(); } catch(e){ alert("匯入失敗"); } };
+    reader.readAsText(file);
+}
+function confirmClearAll() {
+    openModal("⚠️ 警告", "確定要清空所有數據嗎？此操作無法恢復。", () => { localStorage.clear(); location.reload(); });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
