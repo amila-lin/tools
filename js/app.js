@@ -3,12 +3,14 @@ import { handleNewPlanClick, handleActivePlanEdit, confirmDeleteHistory, setupNe
 import { addLog, editLog, deleteLog, resetForm, validateLogDate } from './modules/logs.js';
 import { switchSecondaryChart, openHistoryChart, closeHistoryChart, downloadHistoryChart } from './modules/charts.js';
 import { switchPage, updateUI } from './modules/ui.js';
+import { renderProfile, saveProfile, setProfileGender, syncLatestLog } from './modules/profile.js';
 import { closeModal } from './modules/modal.js';
 import { appData } from './modules/state.js';
 
 function goToPage(pageId) {
     switchPage(pageId);
-    if (pageId === 'logs') resetForm();
+    if (pageId === 'logs')    resetForm();
+    if (pageId === 'profile') renderProfile();
 }
 
 function bindEvents() {
@@ -17,6 +19,7 @@ function bindEvents() {
     navItems[0].addEventListener('click', () => goToPage('dashboard'));
     navItems[1].addEventListener('click', () => goToPage('logs'));
     navItems[2].addEventListener('click', () => goToPage('goals'));
+    navItems[3].addEventListener('click', () => goToPage('profile'));
 
     // Modal
     document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
@@ -31,6 +34,12 @@ function bindEvents() {
     document.getElementById('log-w').addEventListener('input', validateLogDate);
     document.getElementById('save-btn').addEventListener('click', addLog);
     document.getElementById('cancel-btn').addEventListener('click', resetForm);
+
+    // 個人資料頁
+    document.getElementById('profile-save-btn').addEventListener('click', saveProfile);
+    document.getElementById('profile-sync-btn').addEventListener('click', syncLatestLog);
+    document.getElementById('profile-gender-female').addEventListener('click', () => setProfileGender('female'));
+    document.getElementById('profile-gender-male').addEventListener('click', () => setProfileGender('male'));
 
     // 紀錄頁：無計畫時的跳轉按鈕
     document.getElementById('btn-goto-goals').addEventListener('click', () => goToPage('goals'));

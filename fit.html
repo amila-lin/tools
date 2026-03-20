@@ -258,6 +258,62 @@
     </div>
 </div>
 
+<div id="page-profile" class="page-fade hidden space-y-6">
+    <div class="bg-white p-6 rounded-3xl shadow-sm border border-black/5 space-y-5">
+        <h2 class="text-base font-black">身體基本資訊</h2>
+
+        <div>
+            <label class="block text-[10px] font-bold text-moss mb-2">性別</label>
+            <div class="flex gap-2">
+                <button id="profile-gender-female" class="flex-1 py-2.5 rounded-xl text-sm font-bold border-2 border-primary/20 transition-colors">女</button>
+                <button id="profile-gender-male"   class="flex-1 py-2.5 rounded-xl text-sm font-bold border-2 border-primary/20 transition-colors">男</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="block text-[10px] font-bold text-moss mb-1">身高 (cm)</label>
+                <input type="number" id="profile-height" step="0.1" placeholder="例：165"
+                    class="w-full p-3 rounded-xl border-2 border-gray-50 bg-gray-50/50 outline-none focus:border-primary text-sm transition-all">
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-moss mb-1">年齡</label>
+                <input type="number" id="profile-age" placeholder="例：28"
+                    class="w-full p-3 rounded-xl border-2 border-gray-50 bg-gray-50/50 outline-none focus:border-primary text-sm transition-all">
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold text-moss">體重 / 體脂 / 內臟脂肪</span>
+            <button id="profile-sync-btn" class="hidden text-[10px] font-bold text-accent border border-accent/30 px-3 py-1 rounded-lg">同步最新紀錄</button>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+            <div>
+                <label class="block text-[10px] text-moss mb-1">體重 (kg)</label>
+                <input type="number" id="profile-w" step="0.1" placeholder="例：65"
+                    class="w-full p-3 rounded-xl border-2 border-gray-50 bg-gray-50/50 outline-none focus:border-primary text-sm transition-all">
+            </div>
+            <div>
+                <label class="block text-[10px] text-moss mb-1">體脂肪 (%)</label>
+                <input type="number" id="profile-f" step="0.1" placeholder="例：25"
+                    class="w-full p-3 rounded-xl border-2 border-gray-50 bg-gray-50/50 outline-none focus:border-primary text-sm transition-all">
+            </div>
+            <div>
+                <label class="block text-[10px] text-moss mb-1">內臟脂肪</label>
+                <input type="number" id="profile-v" step="0.1" placeholder="例：8"
+                    class="w-full p-3 rounded-xl border-2 border-gray-50 bg-gray-50/50 outline-none focus:border-primary text-sm transition-all">
+            </div>
+        </div>
+
+        <button id="profile-save-btn" class="w-full py-3 bg-primary text-white rounded-2xl font-bold text-sm">儲存資料</button>
+    </div>
+
+    <div class="bg-white p-6 rounded-3xl shadow-sm border border-black/5 space-y-4">
+        <h2 class="text-base font-black">體型評估</h2>
+        <div id="profile-assessment"></div>
+    </div>
+</div>
+
 <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-4xl flex justify-around p-3 z-50">
     <button class="nav-item flex-1 flex flex-col items-center gap-1 text-primary">
         <span class="text-2xl">🌿</span><span class="text-[10px] font-black">儀表板</span>
@@ -267,6 +323,9 @@
     </button>
     <button class="nav-item flex-1 flex flex-col items-center gap-1 text-moss/50">
         <span class="text-2xl">⛳</span><span class="text-[10px] font-bold">旅程</span>
+    </button>
+    <button class="nav-item flex-1 flex flex-col items-center gap-1 text-moss/50">
+        <span class="text-2xl">👤</span><span class="text-[10px] font-bold">個人</span>
     </button>
 </nav>
 

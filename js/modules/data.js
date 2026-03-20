@@ -5,6 +5,8 @@ export function loadData() {
     try {
         const saved = localStorage.getItem('fatLossAppData');
         if (saved) Object.assign(appData, JSON.parse(saved));
+        if (!appData.profile) appData.profile = { gender: 'female', height: 0, age: 0, w: 0, f: 0, v: 0 };
+        if (appData.profile.w === undefined) { appData.profile.w = 0; appData.profile.f = 0; appData.profile.v = 0; }
     } catch (e) {
         console.warn('無法讀取本地資料', e);
     }

@@ -1,5 +1,5 @@
 // 共用狀態：所有模組都從這裡讀取/寫入
-export const appData = { plans: [] };
+export const appData = { plans: [], profile: { gender: 'female', height: 0, age: 0, w: 0, f: 0, v: 0 } };
 
 export const chartInstances = { main: null, secondary: null };
 

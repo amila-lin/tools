@@ -3,12 +3,12 @@ import { getActivePlan } from './plans.js';
 import { renderCharts } from './charts.js';
 
 export function switchPage(pageId) {
-    const validPages = ['dashboard', 'logs', 'goals'];
+    const validPages = ['dashboard', 'logs', 'goals', 'profile'];
     if (!validPages.includes(pageId)) pageId = 'dashboard';
     validPages.forEach(id => document.getElementById(`page-${id}`).classList.add('hidden'));
     document.getElementById(`page-${pageId}`).classList.remove('hidden');
     const navItems = document.querySelectorAll('.nav-item');
-    const pageIdx  = { dashboard: 0, logs: 1, goals: 2 };
+    const pageIdx  = { dashboard: 0, logs: 1, goals: 2, profile: 3 };
     navItems.forEach((btn, idx) => {
         if (idx === pageIdx[pageId]) { btn.classList.add('text-primary'); btn.classList.remove('text-moss/50'); }
         else { btn.classList.remove('text-primary'); btn.classList.add('text-moss/50'); }
