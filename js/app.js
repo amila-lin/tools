@@ -78,6 +78,11 @@ function bindEvents() {
 
     // 全域 update 事件（由各模組 dispatch，統一觸發 UI 刷新）
     document.addEventListener('app:update', () => { updateUI(); validateLogDate(); });
+
+    // iOS keyboard 收起後 reset viewport 偏移
+    document.addEventListener('focusout', () => {
+        if (/iPhone|iPad|iPod/.test(navigator.userAgent)) window.scrollTo(0, 0);
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
