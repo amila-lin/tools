@@ -10,8 +10,13 @@ export function switchPage(pageId) {
     const navItems = document.querySelectorAll('.nav-item');
     const pageIdx  = { dashboard: 0, logs: 1, goals: 2, profile: 3 };
     navItems.forEach((btn, idx) => {
-        if (idx === pageIdx[pageId]) { btn.classList.add('text-primary'); btn.classList.remove('text-moss/50'); }
-        else { btn.classList.remove('text-primary'); btn.classList.add('text-moss/50'); }
+        if (idx === pageIdx[pageId]) {
+            btn.classList.add('text-primary', 'font-black', 'bg-primary/10', 'rounded-2xl', 'px-2', 'py-1');
+            btn.classList.remove('text-moss/50', 'font-bold');
+        } else {
+            btn.classList.remove('text-primary', 'font-black', 'bg-primary/10', 'rounded-2xl', 'px-2', 'py-1');
+            btn.classList.add('text-moss/50', 'font-bold');
+        }
     });
     history.replaceState(null, '', `#${pageId}`);
     updateUI();
