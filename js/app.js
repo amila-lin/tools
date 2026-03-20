@@ -73,6 +73,12 @@ function bindEvents() {
 
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
-    updateUI();
     bindEvents();
+    const hash = location.hash.replace('#', '');
+    goToPage(hash || 'dashboard');
+});
+
+window.addEventListener('hashchange', () => {
+    const hash = location.hash.replace('#', '');
+    goToPage(hash || 'dashboard');
 });

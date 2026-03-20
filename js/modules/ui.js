@@ -3,7 +3,9 @@ import { getActivePlan } from './plans.js';
 import { renderCharts } from './charts.js';
 
 export function switchPage(pageId) {
-    ['dashboard', 'logs', 'goals'].forEach(id => document.getElementById(`page-${id}`).classList.add('hidden'));
+    const validPages = ['dashboard', 'logs', 'goals'];
+    if (!validPages.includes(pageId)) pageId = 'dashboard';
+    validPages.forEach(id => document.getElementById(`page-${id}`).classList.add('hidden'));
     document.getElementById(`page-${pageId}`).classList.remove('hidden');
     const navItems = document.querySelectorAll('.nav-item');
     const pageIdx  = { dashboard: 0, logs: 1, goals: 2 };
@@ -11,6 +13,7 @@ export function switchPage(pageId) {
         if (idx === pageIdx[pageId]) { btn.classList.add('text-primary'); btn.classList.remove('text-moss/50'); }
         else { btn.classList.remove('text-primary'); btn.classList.add('text-moss/50'); }
     });
+    history.replaceState(null, '', `#${pageId}`);
     updateUI();
 }
 
