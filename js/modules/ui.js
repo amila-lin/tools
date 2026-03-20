@@ -65,9 +65,11 @@ export function updateUI() {
         renderCharts(sortedAsc, plan.start);
         updateLogTable(plan);
 
+        const todayStr = new Date().toLocaleDateString('sv');
+        const isExpired = todayStr > plan.end;
         document.getElementById('current-plan-desc').innerHTML = `
             <div class="text-center">
-                <div class="font-bold text-primary text-lg">🌱 計畫進行中</div>
+                <div class="font-bold text-lg ${isExpired ? 'text-danger' : 'text-primary'}">${isExpired ? '⏰ 計畫已到期' : '🌱 計畫進行中'}</div>
                 <div class="text-[11px] text-moss mt-1">${plan.start} ~ ${plan.end}</div>
                 <div class="mt-4 grid grid-cols-2 gap-2 text-[10px]">
                     <div class="bg-oatmeal p-2 rounded-xl border border-primary/5">起始: ${plan.startW}kg</div>

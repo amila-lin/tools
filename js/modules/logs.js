@@ -10,7 +10,7 @@ export function validateLogDate() {
     const hint      = document.getElementById('date-limit-hint');
     if (!plan) { saveBtn.disabled = true; return; }
     const selected = dateInput.value;
-    const today    = new Date().toISOString().split('T')[0];
+    const today    = new Date().toLocaleDateString('sv');
     if (selected > today) {
         hint.innerText = '⚠️ 不能預知未來喔！';
         hint.className = 'text-[10px] mt-1 text-danger';
@@ -18,6 +18,11 @@ export function validateLogDate() {
     }
     if (selected < plan.start || selected > plan.end) {
         hint.innerText = `❌ 不在計畫內 (${plan.start}~${plan.end})`;
+        hint.className = 'text-[10px] mt-1 text-danger';
+        saveBtn.disabled = true; return;
+    }
+    if (!document.getElementById('log-w').value) {
+        hint.innerText = '⚠️ 請填入體重';
         hint.className = 'text-[10px] mt-1 text-danger';
         saveBtn.disabled = true; return;
     }
@@ -46,11 +51,18 @@ export function addLog() {
     if (!date || isNaN(w)) return;
     const log = { date, w, f, v, m, waist };
     const idx = plan.logs.findIndex(l => l.date === date);
-    if (idx > -1) plan.logs[idx] = log; else plan.logs.push(log);
-    plan.logs.sort((a, b) => new Date(b.date) - new Date(a.date));
-    saveData();
-    resetForm();
-    document.dispatchEvent(new CustomEvent('app:update'));
+    const doSave = () => {
+        if (idx > -1) plan.logs[idx] = log; else plan.logs.push(log);
+        plan.logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+        saveData();
+        resetForm();
+        document.dispatchEvent(new CustomEvent('app:update'));
+    };
+    if (idx > -1) {
+        openModal('⚠️ 覆蓋紀錄', `${date} 已有紀錄，確定要覆蓋嗎？`, doSave);
+    } else {
+        doSave();
+    }
 }
 
 export function editLog(date) {
@@ -80,7 +92,7 @@ export function editLog(date) {
 export function resetForm() {
     setIsEditingMode(false);
     const plan  = getActivePlan();
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('sv');
     document.getElementById('log-date').value    = (plan && today > plan.end) ? plan.end : today;
     document.getElementById('log-date').disabled = false;
     ['log-w', 'log-f', 'log-v', 'log-m', 'log-waist'].forEach(id => document.getElementById(id).value = '');

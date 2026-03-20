@@ -28,6 +28,7 @@ function bindEvents() {
 
     // 紀錄頁：表單
     document.getElementById('log-date').addEventListener('change', validateLogDate);
+    document.getElementById('log-w').addEventListener('input', validateLogDate);
     document.getElementById('save-btn').addEventListener('click', addLog);
     document.getElementById('cancel-btn').addEventListener('click', resetForm);
 
