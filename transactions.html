@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>記帳助理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        'primary-dark': '#1D4ED8',
+                        income: '#059669',
+                        expense: '#dc2626',
+                    },
+                    borderRadius: {
+                        '3xl': '24px',
+                        '4xl': '32px',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="css/transactions.css" />
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-32">
+
+<!-- Modal -->
+<div id="modal-overlay" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center px-6">
+    <div class="bg-white rounded-4xl p-6 w-full max-w-sm shadow-xl page-fade">
+        <h3 id="modal-title" class="text-base font-black mb-2 text-slate-800"></h3>
+        <p id="modal-message" class="text-sm text-slate-500 mb-6"></p>
+        <div class="flex gap-3">
+            <button id="modal-cancel" class="flex-1 py-3 rounded-2xl border border-slate-200 text-slate-500 text-sm font-bold">取消</button>
+            <button id="modal-confirm" class="flex-1 py-3 rounded-2xl bg-expense text-white text-sm font-bold">確定</button>
+        </div>
+    </div>
+</div>
+
+<!-- Container -->
+<div class="container mx-auto max-w-4xl px-4 py-8 space-y-4">
+
+    <!-- ── 儀表板 ── -->
+    <div id="page-dashboard" class="page-fade space-y-4">
+
+        <!-- month nav + budget setting -->
+        <div class="flex items-center justify-between px-1">
+            <button id="dash-prev" class="w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm text-slate-500 text-lg">‹</button>
+            <span id="dash-month" class="font-black text-slate-700"></span>
+            <button id="dash-next" class="w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm text-slate-500 text-lg">›</button>
+        </div>
+
+        <!-- budget card (setting + display merged) -->
+        <div class="bg-white rounded-3xl p-4 shadow-sm border border-black/5">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-bold text-slate-600">月預算</span>
+                <button id="show-budget-form" class="text-xs text-primary font-bold">編輯</button>
+            </div>
+            <!-- display: shown when budget is set -->
+            <div id="dash-budget-display" class="hidden mt-2">
+                <div id="dash-budget-text" class="text-xs text-slate-500 mb-2"></div>
+                <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div id="dash-budget-bar" class="h-2 rounded-full transition-all bg-income" style="width:0%"></div>
+                </div>
+            </div>
+            <!-- form: shown when editing -->
+            <div id="budget-form" class="hidden mt-3 flex gap-2">
+                <input type="number" id="budget-input" placeholder="輸入月預算金額"
+                    class="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-primary" />
+                <button id="budget-save" class="px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl">儲存</button>
+            </div>
+        </div>
+
+        <!-- stat cards -->
+        <div class="grid grid-cols-3 gap-3">
+            <div class="bg-white rounded-3xl p-4 shadow-sm border border-black/5 text-center">
+                <div class="text-[10px] text-slate-400 mb-1">收入</div>
+                <div id="dash-income" class="text-base font-black text-income">$0</div>
+            </div>
+            <div class="bg-white rounded-3xl p-4 shadow-sm border border-black/5 text-center">
+                <div class="text-[10px] text-slate-400 mb-1">支出</div>
+                <div id="dash-expense" class="text-base font-black text-expense">$0</div>
+            </div>
+            <div class="bg-white rounded-3xl p-4 shadow-sm border border-black/5 text-center">
+                <div class="text-[10px] text-slate-400 mb-1">結餘</div>
+                <div id="dash-balance" class="text-base font-black text-income">$0</div>
+            </div>
+        </div>
+
+        <!-- chart -->
+        <div class="bg-white rounded-3xl p-5 shadow-sm border border-black/5">
+            <div class="text-sm font-black text-slate-600 mb-3">近 6 個月</div>
+            <canvas id="dash-chart"></canvas>
+        </div>
+
+        <!-- category breakdown -->
+        <div class="bg-white rounded-3xl p-5 shadow-sm border border-black/5">
+            <div class="text-sm font-black text-slate-600 mb-3">本月支出分類</div>
+            <div id="dash-categories" class="space-y-2"></div>
+        </div>
+
+    </div>
+
+    <!-- ── 記帳 ── -->
+    <div id="page-log" class="page-fade hidden space-y-4">
+
+        <!-- add form -->
+        <div id="log-form-card" class="bg-white rounded-3xl p-5 shadow-sm border border-black/5 space-y-4">
+            <h2 id="log-form-title" class="text-base font-black text-slate-700">新增紀錄</h2>
+
+            <!-- type toggle -->
+            <div class="flex gap-2">
+                <button class="type-btn flex-1 py-2.5 rounded-2xl text-sm font-bold transition-colors bg-slate-100 text-slate-500" data-type="expense">支出</button>
+                <button class="type-btn flex-1 py-2.5 rounded-2xl text-sm font-bold transition-colors bg-slate-100 text-slate-500" data-type="income">收入</button>
+            </div>
+
+            <!-- date + amount -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-[10px] text-slate-400 mb-1 block">日期</label>
+                    <input type="date" id="log-date"
+                        class="w-full border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-primary" />
+                </div>
+                <div>
+                    <label class="text-[10px] text-slate-400 mb-1 block">金額</label>
+                    <input type="number" id="log-amount" placeholder="0"
+                        class="w-full border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-primary" />
+                </div>
+            </div>
+
+            <!-- payment method (expense only) -->
+            <div id="log-payment-section">
+                <label class="text-[10px] text-slate-400 mb-2 block">付款方式</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input type="radio" name="payment" id="pay-cash" value="cash" class="accent-primary" checked />
+                        <span class="text-sm">現金</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input type="radio" name="payment" id="pay-card" value="card" class="accent-primary" />
+                        <span class="text-sm">信用卡</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- card section (hidden by default) -->
+            <div id="log-card-section" class="hidden space-y-3">
+                <div>
+                    <label class="text-[10px] text-slate-400 mb-1 block">選擇信用卡</label>
+                    <select id="log-card-select"
+                        class="w-full border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-primary bg-white">
+                    </select>
+                </div>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="log-installment-toggle" class="w-4 h-4 accent-primary rounded" />
+                    <span class="text-sm text-slate-600">分期付款</span>
+                </label>
+                <div id="log-installments-section" class="hidden">
+                    <label class="text-[10px] text-slate-400 mb-1 block">分期數（月）</label>
+                    <input type="number" id="log-installments" value="3" min="2"
+                        class="w-full border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-primary" />
+                </div>
+            </div>
+
+            <!-- category + location -->
+            <datalist id="category-list"></datalist>
+            <datalist id="location-list"></datalist>
+            <div>
+                <label id="log-category-label" class="text-[10px] text-slate-400 mb-1 block">消費類型</label>
+                <div id="category-chips" class="flex flex-wrap gap-1.5 mb-2">
+                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-slate-200 text-slate-500 hover:border-primary hover:text-primary transition-colors">餐飲</button>
+                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-slate-200 text-slate-500 hover:border-primary hover:text-primary transition-colors">交通</button>
+                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-slate-200 text-slate-500 hover:border-primary hover:text-primary transition-colors">購物</button>
+                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-slate-200 text-slate-500 hover:border-primary hover:text-primary transition-colors">娛樂</button>
+                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-slate-200 text-slate-500 hover:border-primary hover:text-primary transition-colors">醫療</button>
+                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-slate-200 text-slate-500 hover:border-primary hover:text-primary transition-colors">生活費</button>
+                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-slate-200 text-slate-500 hover:border-primary hover:text-primary transition-colors">訂閱</button>
+                </div>
+                <input type="text" id="log-category" placeholder="餐飲、交通…" list="category-list"
+                    class="w-full border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-primary" />
+            </div>
+            <div id="log-location-section">
+                <label class="text-[10px] text-slate-400 mb-1 block">消費地點</label>
+                <div id="location-chips" class="flex flex-wrap gap-1.5 mb-2 hidden"></div>
+                <input type="text" id="log-location" placeholder="全聯、Netflix…" list="location-list"
+                    class="w-full border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-primary" />
+            </div>
+
+            <div>
+                <label class="text-[10px] text-slate-400 mb-1 block">備註</label>
+                <textarea id="log-note" rows="2" placeholder="選填…"
+                    class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary resize-none"></textarea>
+            </div>
+
+            <div class="flex gap-2">
+                <button id="log-cancel-btn"
+                    class="hidden flex-1 py-3 border border-slate-200 text-slate-500 font-bold rounded-2xl active:scale-95 transition-transform">取消</button>
+                <button id="log-add-btn"
+                    class="flex-1 py-3 bg-primary text-white font-black rounded-2xl active:scale-95 transition-transform">新增</button>
+            </div>
+        </div>
+
+        <!-- list -->
+        <div class="bg-white rounded-3xl p-5 shadow-sm border border-black/5">
+            <div class="flex items-center justify-between mb-4">
+                <button id="log-prev" class="w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 text-slate-500">‹</button>
+                <span id="log-month" class="text-sm font-black text-slate-600"></span>
+                <button id="log-next" class="w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 text-slate-500">›</button>
+            </div>
+            <div id="log-list" class="hide-scrollbar"></div>
+        </div>
+
+    </div>
+
+    <!-- ── 項目管理 ── -->
+    <div id="page-management" class="page-fade hidden space-y-4">
+
+        <!-- tabs -->
+        <div class="flex border-b border-slate-200">
+            <button id="tab-cards"
+                class="flex-1 py-3 text-sm font-black border-b-2 border-primary text-primary transition-colors">信用卡</button>
+            <button id="tab-installments"
+                class="flex-1 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 transition-colors">分期付款</button>
+        </div>
+
+        <!-- 信用卡 section -->
+        <div id="cards-section" class="space-y-4">
+            <div id="card-form-card" class="bg-white rounded-3xl p-5 shadow-sm border border-black/5 space-y-3">
+                <h3 id="card-form-title" class="text-sm font-black text-slate-700">新增信用卡</h3>
+                <div class="grid grid-cols-3 gap-2">
+                    <input type="text" id="card-bank" placeholder="銀行名稱"
+                        class="border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary" />
+                    <input type="text" id="card-last4" placeholder="末四碼" maxlength="4"
+                        class="border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary" />
+                    <input type="number" id="card-billing" placeholder="結帳日" min="1" max="31"
+                        class="border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary" />
+                </div>
+                <div class="flex gap-2">
+                    <button id="cancel-card-btn"
+                        class="hidden flex-1 py-2.5 border border-slate-200 text-slate-500 text-sm font-bold rounded-2xl active:scale-95 transition-transform">取消</button>
+                    <button id="add-card-btn"
+                        class="flex-1 py-2.5 bg-primary text-white text-sm font-bold rounded-2xl active:scale-95 transition-transform">新增信用卡</button>
+                </div>
+            </div>
+            <div class="bg-white rounded-3xl p-5 shadow-sm border border-black/5">
+                <div id="cards-list"></div>
+            </div>
+        </div>
+
+        <!-- 分期付款 section -->
+        <div id="installments-section" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-5 shadow-sm border border-black/5">
+                <div id="installments-list"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-4xl flex justify-around p-3 z-50">
+        <button class="nav-item flex flex-col items-center gap-0.5 text-primary font-black bg-primary/10 rounded-2xl px-3 py-1.5 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+            </svg>
+            <span class="text-[10px]">儀表板</span>
+        </button>
+        <button class="nav-item flex flex-col items-center gap-0.5 text-slate-400/60 font-bold transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span class="text-[10px]">記帳</span>
+        </button>
+        <button class="nav-item flex flex-col items-center gap-0.5 text-slate-400/60 font-bold transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="5" width="20" height="14" rx="2"/>
+                <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+            <span class="text-[10px]">項目管理</span>
+        </button>
+</nav>
+
+<script type="module" src="js/transactions/app.js"></script>
+</body>
+</html>
