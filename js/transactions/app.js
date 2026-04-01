@@ -71,6 +71,10 @@ function bindEvents() {
             document.getElementById('log-category').value = chip.textContent;
         });
     });
+    document.getElementById('log-amount').addEventListener('input', () => {
+        const val = parseFloat(document.getElementById('log-amount').value);
+        if (val > 0) document.getElementById('amount-error')?.classList.add('hidden');
+    });
     document.getElementById('log-add-btn').addEventListener('click', addTransaction);
     document.getElementById('log-cancel-btn').addEventListener('click', cancelEdit);
     document.getElementById('log-prev').addEventListener('click', prevLogMonth);

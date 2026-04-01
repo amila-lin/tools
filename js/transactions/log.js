@@ -141,7 +141,15 @@ function readForm() {
 
 export function addTransaction() {
     const { date, amount, type, payMethod, installments, category, location, note } = readForm();
-    if (!date || isNaN(amount) || amount <= 0) return;
+    const amtErr = document.getElementById('amount-error');
+    if (!date || isNaN(amount) || amount <= 0) {
+        if (amtErr) amtErr.classList.remove('hidden');
+        return;
+    }
+    if (amtErr) amtErr.classList.add('hidden');
+
+    const payType = document.querySelector('input[name="payment"]:checked')?.value;
+    if (payType === 'card' && !appData.cards.length) return;
 
     if (editingId) {
         const tx = appData.transactions.find(t => t.id === editingId);
@@ -259,6 +267,7 @@ function resetLogForm() {
     document.getElementById('log-note').value         = '';
     document.getElementById('log-installments').value = '3';
     document.getElementById('log-installment-toggle').checked = false;
+    document.getElementById('amount-error')?.classList.add('hidden');
     document.getElementById('log-installments-section').classList.add('hidden');
     document.getElementById('log-form-title').textContent = '新增紀錄';
     const addBtn = document.getElementById('log-add-btn');
