@@ -28,6 +28,22 @@ function bindEvents() {
         if (e.target === e.currentTarget) closeModal();
     });
 
+    // No card warning
+    document.getElementById('no-card-warning').addEventListener('click', () => { location.hash = 'management'; });
+
+    // Help modal
+    const closeHelp = () => document.getElementById('help-modal').classList.add('hidden');
+    document.getElementById('help-btn').addEventListener('click', () => document.getElementById('help-modal').classList.remove('hidden'));
+    document.getElementById('help-close').addEventListener('click', closeHelp);
+    document.getElementById('help-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeHelp(); });
+
+    // Category detail modal
+    const closeCatDetail = () => document.getElementById('cat-detail-modal').classList.add('hidden');
+    document.getElementById('cat-detail-close').addEventListener('click', closeCatDetail);
+    document.getElementById('cat-detail-modal').addEventListener('click', e => {
+        if (e.target === e.currentTarget) closeCatDetail();
+    });
+
     // Dashboard
     document.getElementById('dash-prev').addEventListener('click', prevMonth);
     document.getElementById('dash-next').addEventListener('click', nextMonth);

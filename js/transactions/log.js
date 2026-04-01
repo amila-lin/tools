@@ -11,6 +11,7 @@ export function renderLog() {
     refreshDatalist('location-list',  appData.transactions.map(t => t.location).filter(Boolean));
     refreshLocationChips();
     renderLogList();
+    renderInstallmentDue();
 }
 
 function refreshLocationChips() {
@@ -40,10 +41,22 @@ function refreshDatalist(id, values) {
 
 function refreshCardSelect() {
     const sel = document.getElementById('log-card-select');
+    const warn = document.getElementById('no-card-warning');
     if (!sel) return;
-    sel.innerHTML = appData.cards.length
-        ? appData.cards.map(c => `<option value="${c.id}">${c.bank} ****${c.lastFour}</option>`).join('')
-        : '<option value="">請先到項目管理新增信用卡</option>';
+    const instLabel = document.getElementById('log-installment-toggle-label');
+    if (appData.cards.length) {
+        sel.innerHTML = appData.cards.map(c => `<option value="${c.id}">${c.bank} ****${c.lastFour}</option>`).join('');
+        sel.classList.remove('hidden');
+        if (warn) warn.classList.add('hidden');
+        if (instLabel) instLabel.classList.remove('hidden');
+    } else {
+        sel.innerHTML = '';
+        sel.classList.add('hidden');
+        if (warn) warn.classList.remove('hidden');
+        if (instLabel) instLabel.classList.add('hidden');
+        document.getElementById('log-installments-section').classList.add('hidden');
+        document.getElementById('log-installment-toggle').checked = false;
+    }
 }
 
 export function updatePaymentUI() {
@@ -84,7 +97,10 @@ function renderLogList() {
                     <span class="text-[10px] px-1.5 py-0.5 rounded-full ${typeCls}">${typeLabel}</span>
                 </div>
                 <div class="text-sm font-medium text-slate-700 truncate">${t.category || '未分類'}${t.location ? ' · ' + t.location : ''}</div>
-                <div class="text-xs text-slate-400">${payLabel}${instText}</div>
+                <div class="flex items-center gap-1 text-xs text-slate-400">
+                    ${t.paymentMethod !== 'cash' ? `<span>💳</span>` : ''}
+                    <span>${payLabel}${instText}</span>
+                </div>
                 ${t.note ? `<div class="text-xs text-slate-400 mt-0.5 italic">${t.note}</div>` : ''}
             </div>
             <div class="flex items-center gap-3 ml-2 shrink-0">
@@ -290,10 +306,65 @@ export function prevLogMonth() {
     const [y, m] = logMonth.split('-').map(Number);
     logMonth = new Date(y, m - 2, 1).toLocaleDateString('sv').slice(0, 7);
     renderLogList();
+    renderInstallmentDue();
 }
 
 export function nextLogMonth() {
     const [y, m] = logMonth.split('-').map(Number);
     logMonth = new Date(y, m, 1).toLocaleDateString('sv').slice(0, 7);
     renderLogList();
+    renderInstallmentDue();
+}
+
+function getInstallmentBillingInMonth(inst, card, month) {
+    if (!card) return null;
+    const billingDay = card.billingDay;
+    const start = new Date(inst.startDate);
+    let billing = new Date(start.getFullYear(), start.getMonth(), billingDay);
+    if (billing < start) billing = new Date(start.getFullYear(), start.getMonth() + 1, billingDay);
+    let count = 0;
+    while (count < inst.months) {
+        const m = billing.toLocaleDateString('sv').slice(0, 7);
+        if (m === month) return { date: billing, period: count + 1 };
+        if (m > month) break;
+        count++;
+        billing = new Date(billing.getFullYear(), billing.getMonth() + 1, billingDay);
+    }
+    return null;
+}
+
+function renderInstallmentDue() {
+    const el = document.getElementById('log-installment-due');
+    if (!el) return;
+
+    const today = new Date();
+    const dues = [];
+    appData.installments.forEach(inst => {
+        const card = appData.cards.find(c => c.id === inst.cardId);
+        const hit = getInstallmentBillingInMonth(inst, card, logMonth);
+        if (hit) dues.push({ inst, card, hit });
+    });
+
+    if (!dues.length) { el.classList.add('hidden'); return; }
+    el.classList.remove('hidden');
+
+    el.innerHTML = `
+        <div class="text-sm font-black text-slate-600 mb-3">本月分期（${dues.length}筆）</div>
+        ${dues.map(({ inst, card, hit }) => {
+            const cardName = card ? `${card.bank} ****${card.lastFour}` : '未知卡片';
+            const isPaid = hit.date <= today;
+            const dateStr = hit.date.toLocaleDateString('sv');
+            const statusCls = isPaid ? 'text-income font-bold' : 'text-slate-400';
+            const statusTxt = isPaid ? '已繳 ✓' : '待繳';
+            return `<div class="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-medium text-slate-700 truncate">${inst.desc}</div>
+                    <div class="text-xs text-slate-400 mt-0.5">${cardName} · 第 ${hit.period}/${inst.months} 期 · 結帳日 ${dateStr}</div>
+                </div>
+                <div class="flex items-center gap-3 ml-2 shrink-0">
+                    <span class="text-base font-bold text-expense">-$${inst.monthlyAmount.toLocaleString()}</span>
+                    <span class="text-xs ${statusCls}">${statusTxt}</span>
+                </div>
+            </div>`;
+        }).join('')}`;
 }

@@ -40,13 +40,71 @@
     </div>
 </div>
 
+<!-- Help Modal -->
+<div id="help-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center px-4 pb-28 sm:pb-0">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-xl page-fade max-h-[80vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-black text-slate-800">使用說明</h3>
+            <button id="help-close" class="text-slate-400 text-2xl leading-none">×</button>
+        </div>
+        <div class="space-y-4 text-sm text-slate-600">
+            <div>
+                <div class="font-black text-slate-700 mb-1">📊 儀表板</div>
+                <ul class="space-y-1 text-slate-500">
+                    <li>• 查看本月收支統計與結餘</li>
+                    <li>• 設定月預算，追蹤用度進度</li>
+                    <li>• 點選支出分類可查看明細</li>
+                    <li>• 近 6 個月趨勢圖表</li>
+                </ul>
+            </div>
+            <div>
+                <div class="font-black text-slate-700 mb-1">➕ 記帳</div>
+                <ul class="space-y-1 text-slate-500">
+                    <li>• 支援收入 / 支出兩種類型</li>
+                    <li>• 支出可選擇現金或信用卡</li>
+                    <li>• 信用卡支出可設定分期期數</li>
+                    <li>• 本月分期繳款一覽顯示於列表下方</li>
+                </ul>
+            </div>
+            <div>
+                <div class="font-black text-slate-700 mb-1">💳 項目管理</div>
+                <ul class="space-y-1 text-slate-500">
+                    <li>• 新增 / 編輯信用卡資料（銀行、末四碼、結帳日）</li>
+                    <li>• 查看所有分期計畫與繳款進度</li>
+                </ul>
+            </div>
+            <div class="bg-slate-50 rounded-2xl p-3">
+                <div class="font-black text-slate-700 mb-1">💡 小提示</div>
+                <ul class="space-y-1 text-slate-500">
+                    <li>• 分期金額會自動依結帳日計算至月預算</li>
+                    <li>• 支出分類數字與月預算「已用」對應一致</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category Detail Modal -->
+<div id="cat-detail-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center px-4 pb-28 sm:pb-0">
+    <div class="bg-white rounded-3xl p-5 w-full max-w-sm shadow-xl page-fade">
+        <div class="flex items-center justify-between mb-4">
+            <h3 id="cat-detail-title" class="text-base font-black text-slate-800"></h3>
+            <button id="cat-detail-close" class="text-slate-400 text-2xl leading-none">×</button>
+        </div>
+        <div id="cat-detail-list" class="max-h-72 overflow-y-auto"></div>
+    </div>
+</div>
+
 <!-- Container -->
 <div class="container mx-auto max-w-4xl px-4 py-8 space-y-4">
 
     <!-- ── 儀表板 ── -->
     <div id="page-dashboard" class="page-fade space-y-4">
 
-        <h1 class="text-2xl font-black text-slate-800 text-center">記帳助理 💰</h1>
+        <div class="flex items-center justify-center gap-2">
+            <h1 class="text-2xl font-black text-slate-800">記帳助理 💰</h1>
+            <button id="help-btn" class="w-6 h-6 rounded-full border border-slate-300 text-slate-400 text-xs font-bold hover:border-primary hover:text-primary transition-colors">?</button>
+        </div>
 
         <!-- month nav + budget setting -->
         <div class="flex items-center justify-between px-1">
@@ -151,12 +209,15 @@
             <!-- card section (hidden by default) -->
             <div id="log-card-section" class="hidden space-y-3">
                 <div>
-                    <label class="text-[10px] text-slate-400 mb-1 block">選擇信用卡</label>
+                    <div class="flex items-center gap-2 mb-1">
+                        <label class="text-[10px] text-slate-400">選擇信用卡</label>
+                        <span id="no-card-warning" class="hidden text-[10px] text-expense cursor-pointer hover:underline">尚未建立信用卡，點此新增</span>
+                    </div>
                     <select id="log-card-select"
                         class="w-full border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-primary bg-white">
                     </select>
                 </div>
-                <label class="flex items-center gap-2 cursor-pointer select-none">
+                <label id="log-installment-toggle-label" class="flex items-center gap-2 cursor-pointer select-none">
                     <input type="checkbox" id="log-installment-toggle" class="w-4 h-4 accent-primary rounded" />
                     <span class="text-sm text-slate-600">分期付款</span>
                 </label>
@@ -214,6 +275,8 @@
             </div>
             <div id="log-list" class="hide-scrollbar"></div>
         </div>
+
+        <div id="log-installment-due" class="hidden bg-white rounded-3xl p-5 shadow-sm border border-black/5"></div>
 
     </div>
 
