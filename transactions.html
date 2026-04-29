@@ -323,6 +323,26 @@
             </div>
         </div>
 
+        <!-- 資料管理 section -->
+        <div class="bg-white rounded-3xl p-5 shadow-sm border border-black/5 space-y-4">
+            <div class="text-sm font-black text-slate-600">資料管理</div>
+            <div>
+                <div class="text-xs font-bold text-slate-500 mb-2">匯出</div>
+                <div class="flex gap-2">
+                    <button id="export-json-btn" class="flex-1 py-2.5 bg-slate-100 text-slate-600 text-sm font-bold rounded-2xl active:scale-95 transition-transform hover:bg-slate-200">完整備份 JSON</button>
+                    <button id="export-csv-btn" class="flex-1 py-2.5 bg-slate-100 text-slate-600 text-sm font-bold rounded-2xl active:scale-95 transition-transform hover:bg-slate-200">帳務紀錄 CSV</button>
+                </div>
+            </div>
+            <div class="border-t border-slate-100 pt-4">
+                <div class="text-xs font-bold text-slate-500 mb-1">匯入 JSON 備份</div>
+                <div class="text-xs text-slate-400 mb-2">現有資料將被覆蓋，請確認備份正確</div>
+                <label class="flex items-center justify-center w-full py-2.5 bg-slate-100 text-slate-600 text-sm font-bold rounded-2xl cursor-pointer active:scale-95 transition-transform hover:bg-slate-200">
+                    選擇 JSON 檔案
+                    <input type="file" id="import-json-input" accept=".json" class="hidden" />
+                </label>
+            </div>
+        </div>
+
     </div>
 </div>
 

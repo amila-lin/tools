@@ -4,6 +4,7 @@ import { switchPage, closeModal } from './ui.js';
 import { renderDashboard, prevMonth, nextMonth, saveBudget, getViewMonth } from './dashboard.js';
 import { renderLog, addTransaction, setTransactionType, updatePaymentUI, toggleInstallmentSection, prevLogMonth, nextLogMonth, cancelEdit } from './log.js';
 import { renderManagement, switchTab, addCard, cancelCardEdit } from './management.js';
+import { exportJSON, exportCSV, handleImportFile } from './dataManagement.js';
 
 const VALID_PAGES = ['dashboard', 'log', 'management'];
 
@@ -85,6 +86,12 @@ function bindEvents() {
     document.getElementById('tab-installments').addEventListener('click', () => switchTab('installments'));
     document.getElementById('add-card-btn').addEventListener('click', addCard);
     document.getElementById('cancel-card-btn').addEventListener('click', cancelCardEdit);
+    document.getElementById('export-json-btn').addEventListener('click', exportJSON);
+    document.getElementById('export-csv-btn').addEventListener('click', exportCSV);
+    document.getElementById('import-json-input').addEventListener('change', e => {
+        handleImportFile(e.target.files[0]);
+        e.target.value = '';
+    });
 
     // Global update (e.g. after card added, refresh log card select)
     document.addEventListener('app:update', () => {

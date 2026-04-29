@@ -156,34 +156,56 @@ function renderCategories() {
         }
     });
 
-    const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
     const total  = sorted.reduce((s, [, v]) => s + v, 0);
     const el = document.getElementById('dash-categories');
     if (!sorted.length) { el.innerHTML = '<p class="text-sm text-slate-400">本月無支出紀錄</p>'; return; }
-    el.innerHTML = sorted.map(([cat, amt]) => {
-        const pct = total ? Math.round(amt / total * 100) : 0;
-        const badge = instKeys.has(cat) ? `<span class="text-[9px] px-1 py-0.5 rounded bg-primary/10 text-primary font-bold shrink-0">分期</span>` : '';
-        return `<div class="cat-detail-row flex items-center gap-2 cursor-pointer hover:bg-slate-50 -mx-1 px-1 rounded-xl transition-colors" data-cat="${cat}" data-inst="${instKeys.has(cat)}">
-            <span class="text-sm w-20 shrink-0 truncate text-slate-600">${cat}</span>
-            <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div class="h-1.5 bg-primary rounded-full" style="width:${pct}%"></div>
-            </div>
-            <div class="flex items-center justify-end gap-1 w-20 shrink-0">
-                ${badge}<span class="text-sm text-slate-500">$${amt.toLocaleString()}</span>
-            </div>
-        </div>`;
-    }).join('');
 
-    const isHoverDevice = window.matchMedia('(hover: hover)').matches;
-    el.querySelectorAll('.cat-detail-row').forEach(row => {
-        const cat = row.dataset.cat;
-        const isInst = row.dataset.inst === 'true';
-        row.addEventListener('click', () => openCatDetail(cat, isInst));
-        if (isHoverDevice) {
-            row.addEventListener('mouseenter', e => showCatTooltip(e, cat, isInst));
-            row.addEventListener('mouseleave', hideCatTooltip);
-        }
-    });
+    const LIMIT = 5;
+    let expanded = false;
+
+    function renderRows() {
+        const visible = expanded ? sorted : sorted.slice(0, LIMIT);
+        const rows = visible.map(([cat, amt]) => {
+            const pct = total ? Math.round(amt / total * 100) : 0;
+            const badge = instKeys.has(cat) ? `<span class="text-[9px] px-1 py-0.5 rounded bg-primary/10 text-primary font-bold shrink-0">分期</span>` : '';
+            return `<div class="cat-detail-row flex items-center gap-2 cursor-pointer hover:bg-slate-50 -mx-1 px-1 rounded-xl transition-colors" data-cat="${cat}" data-inst="${instKeys.has(cat)}">
+                <span class="text-sm w-20 shrink-0 truncate text-slate-600">${cat}</span>
+                <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="h-1.5 bg-primary rounded-full" style="width:${pct}%"></div>
+                </div>
+                <div class="flex items-center justify-end gap-1 w-20 shrink-0">
+                    ${badge}<span class="text-sm text-slate-500">$${amt.toLocaleString()}</span>
+                </div>
+            </div>`;
+        }).join('');
+
+        const toggleBtn = sorted.length > LIMIT
+            ? `<button id="cat-toggle-btn" class="mt-2 w-full text-xs text-primary font-bold py-1.5 hover:bg-primary/5 rounded-xl transition-colors">
+                ${expanded ? '收起' : `顯示全部（${sorted.length} 項）`}
+               </button>`
+            : '';
+
+        el.innerHTML = rows + toggleBtn;
+
+        const isHoverDevice = window.matchMedia('(hover: hover)').matches;
+        el.querySelectorAll('.cat-detail-row').forEach(row => {
+            const cat = row.dataset.cat;
+            const isInst = row.dataset.inst === 'true';
+            row.addEventListener('click', () => openCatDetail(cat, isInst));
+            if (isHoverDevice) {
+                row.addEventListener('mouseenter', e => showCatTooltip(e, cat, isInst));
+                row.addEventListener('mouseleave', hideCatTooltip);
+            }
+        });
+
+        document.getElementById('cat-toggle-btn')?.addEventListener('click', () => {
+            expanded = !expanded;
+            renderRows();
+        });
+    }
+
+    renderRows();
 }
 
 function buildCategoryDetailHTML(cat, isInst) {
