@@ -278,23 +278,23 @@
                         class="w-full border border-slate-200 rounded-xl pl-8 pr-8 py-2.5 text-sm outline-none focus:border-primary" />
                     <button id="search-clear-btn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none">×</button>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="relative">
+                <div class="grid grid-cols-2 gap-2 min-w-0">
+                    <div class="relative min-w-0">
                         <input type="date" id="search-date-from"
-                            class="w-full border border-slate-200 rounded-xl px-3 py-2 pr-7 text-sm outline-none focus:border-primary" />
+                            class="block w-full min-w-0 border border-slate-200 rounded-xl px-3 py-2 pr-7 text-sm outline-none focus:border-primary" />
                         <button id="search-date-from-clear" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none">×</button>
                     </div>
-                    <div class="relative">
+                    <div class="relative min-w-0">
                         <input type="date" id="search-date-to"
-                            class="w-full border border-slate-200 rounded-xl px-3 py-2 pr-7 text-sm outline-none focus:border-primary" />
+                            class="block w-full min-w-0 border border-slate-200 rounded-xl px-3 py-2 pr-7 text-sm outline-none focus:border-primary" />
                         <button id="search-date-to-clear" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none">×</button>
                     </div>
                 </div>
                 <div class="relative">
                     <input id="search-payment" type="text" readonly placeholder="所有付款方式"
                         aria-label="選擇付款方式，可多選"
-                        class="w-full border border-slate-200 rounded-xl px-3 py-2.5 pr-9 text-sm outline-none focus:border-primary bg-white cursor-pointer" />
-                    <button id="search-payment-clear" type="button" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none" aria-label="清除付款方式">×</button>
+                        class="block w-full min-w-0 border border-slate-200 rounded-xl px-3 py-2.5 pr-9 text-sm outline-none focus:border-primary bg-white cursor-pointer truncate" />
+                    <button id="search-payment-clear" type="button" class="hidden absolute z-10 right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none" aria-label="清除付款方式">×</button>
                     <div id="search-payment-options" class="hidden absolute z-20 left-0 right-0 mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg"></div>
                 </div>
             </div>

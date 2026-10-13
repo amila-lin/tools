@@ -117,6 +117,7 @@ export function togglePaymentSearch(id) {
     if (index === -1) searchState.paymentIds.push(id);
     else searchState.paymentIds.splice(index, 1);
     renderPaymentSearch();
+    document.getElementById('search-payment-options')?.classList.remove('hidden');
     applySearch();
 }
 

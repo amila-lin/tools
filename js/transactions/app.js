@@ -95,19 +95,30 @@ function bindEvents() {
     document.getElementById('search-date-to').addEventListener('change', syncSearch);
     const paymentSearch = document.getElementById('search-payment');
     const paymentOptions = document.getElementById('search-payment-options');
-    paymentSearch.addEventListener('click', () => paymentOptions.classList.toggle('hidden'));
+    const openPaymentOptions = () => paymentOptions.classList.remove('hidden');
+    paymentSearch.addEventListener('click', openPaymentOptions);
+    paymentSearch.addEventListener('pointerdown', openPaymentOptions);
+    paymentOptions.addEventListener('pointerdown', e => {
+        const option = e.target.closest('.search-payment-option');
+        if (option) e.preventDefault();
+    });
     paymentOptions.addEventListener('click', e => {
         const option = e.target.closest('.search-payment-option');
         if (!option) return;
+        e.preventDefault();
         togglePaymentSearch(option.dataset.paymentId);
         paymentOptions.classList.remove('hidden');
         document.getElementById('search-payment-clear').classList.remove('hidden');
     });
-    document.getElementById('search-payment-clear').addEventListener('click', e => {
+    const paymentClear = document.getElementById('search-payment-clear');
+    const clearSelectedPayments = e => {
+        e.preventDefault();
         e.stopPropagation();
         clearPaymentSearch();
-        e.currentTarget.classList.add('hidden');
-    });
+        paymentOptions.classList.add('hidden');
+    };
+    paymentClear.addEventListener('pointerdown', clearSelectedPayments);
+    paymentClear.addEventListener('click', clearSelectedPayments);
     document.addEventListener('click', e => {
         if (!paymentSearch.parentElement.contains(e.target)) paymentOptions.classList.add('hidden');
     });
