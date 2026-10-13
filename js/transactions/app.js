@@ -2,7 +2,7 @@ import { loadData } from './data.js';
 import { appData } from './state.js';
 import { switchPage, closeModal } from './ui.js';
 import { renderDashboard, prevMonth, nextMonth, saveBudget, getViewMonth } from './dashboard.js';
-import { renderLog, addTransaction, setTransactionType, updatePaymentUI, toggleInstallmentSection, prevLogMonth, nextLogMonth, cancelEdit } from './log.js';
+import { renderLog, addTransaction, setTransactionType, updatePaymentUI, toggleInstallmentSection, prevLogMonth, nextLogMonth, cancelEdit, applySearch, searchState, renderPaymentSearch, togglePaymentSearch, clearPaymentSearch } from './log.js';
 import { renderManagement, switchTab, addCard, cancelCardEdit } from './management.js';
 import { exportJSON, exportCSV, handleImportFile } from './dataManagement.js';
 
@@ -80,6 +80,58 @@ function bindEvents() {
     document.getElementById('log-cancel-btn').addEventListener('click', cancelEdit);
     document.getElementById('log-prev').addEventListener('click', prevLogMonth);
     document.getElementById('log-next').addEventListener('click', nextLogMonth);
+
+    // Search
+    function syncSearch() {
+        searchState.keyword  = document.getElementById('search-keyword').value;
+        searchState.dateFrom = document.getElementById('search-date-from').value;
+        searchState.dateTo   = document.getElementById('search-date-to').value;
+        document.getElementById('search-date-from-clear').classList.toggle('hidden', !searchState.dateFrom);
+        document.getElementById('search-date-to-clear').classList.toggle('hidden', !searchState.dateTo);
+        applySearch();
+    }
+    document.getElementById('search-keyword').addEventListener('input', syncSearch);
+    document.getElementById('search-date-from').addEventListener('change', syncSearch);
+    document.getElementById('search-date-to').addEventListener('change', syncSearch);
+    const paymentSearch = document.getElementById('search-payment');
+    const paymentOptions = document.getElementById('search-payment-options');
+    paymentSearch.addEventListener('click', () => paymentOptions.classList.toggle('hidden'));
+    paymentOptions.addEventListener('click', e => {
+        const option = e.target.closest('.search-payment-option');
+        if (!option) return;
+        togglePaymentSearch(option.dataset.paymentId);
+        paymentOptions.classList.remove('hidden');
+        document.getElementById('search-payment-clear').classList.remove('hidden');
+    });
+    document.getElementById('search-payment-clear').addEventListener('click', e => {
+        e.stopPropagation();
+        clearPaymentSearch();
+        e.currentTarget.classList.add('hidden');
+    });
+    document.addEventListener('click', e => {
+        if (!paymentSearch.parentElement.contains(e.target)) paymentOptions.classList.add('hidden');
+    });
+    document.getElementById('search-clear-btn').addEventListener('click', () => {
+        document.getElementById('search-keyword').value = '';
+        syncSearch();
+    });
+    document.getElementById('search-reset-btn').addEventListener('click', () => {
+        document.getElementById('search-keyword').value = '';
+        document.getElementById('search-date-from').value = '';
+        document.getElementById('search-date-to').value = '';
+        clearPaymentSearch();
+        document.getElementById('search-payment-clear').classList.add('hidden');
+        syncSearch();
+    });
+    document.getElementById('search-date-from-clear').addEventListener('click', () => {
+        document.getElementById('search-date-from').value = '';
+        syncSearch();
+    });
+    document.getElementById('search-date-to-clear').addEventListener('click', () => {
+        document.getElementById('search-date-to').value = '';
+        syncSearch();
+    });
+    renderPaymentSearch();
 
     // Management
     document.getElementById('tab-cards').addEventListener('click', () => switchTab('cards'));

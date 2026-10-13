@@ -31,7 +31,7 @@ function renderSummaryCards() {
     document.getElementById('dash-expense').textContent = '$' + expense.toLocaleString();
     const el = document.getElementById('dash-balance');
     el.textContent = '$' + balance.toLocaleString();
-    el.className = 'text-xl font-black ' + (balance >= 0 ? 'text-income' : 'text-expense');
+    el.className = 'text-base font-black ' + (balance >= 0 ? 'text-income' : 'text-expense');
 }
 
 function getBudget(month) {
@@ -227,7 +227,7 @@ function buildCategoryDetailHTML(cat, isInst) {
                 const m = billing.toLocaleDateString('sv').slice(0, 7);
                 if (m === viewMonth) {
                     if (viewMonth !== currentMonth || billing <= today) {
-                        const cardName = `${card.bank} ****${card.lastFour}`;
+                        const cardName = `${card.bank} ${card.cardName}`;
                         const isPaid = billing <= today;
                         rows.push(`<div class="py-2.5 border-b border-slate-100 last:border-0">
                             <div class="flex items-center justify-between">

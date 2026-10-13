@@ -26,7 +26,7 @@
     </script>
     <link rel="stylesheet" href="css/transactions.css" />
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen pb-32">
+<body class="text-slate-800 min-h-screen pb-32" style="background: linear-gradient(135deg, #7A6CA4 0%, #5A96D8 100%); background-attachment: fixed;">
 
 <!-- Modal -->
 <div id="modal-overlay" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center px-6">
@@ -49,7 +49,7 @@
         </div>
         <div class="space-y-4 text-sm text-slate-600">
             <div>
-                <div class="font-black text-slate-700 mb-1">📊 儀表板</div>
+                <div class="font-black text-slate-800 mb-1">📊 儀表板</div>
                 <ul class="space-y-1 text-slate-500">
                     <li>• 查看本月收支統計與結餘</li>
                     <li>• 設定月預算，追蹤用度進度</li>
@@ -58,7 +58,7 @@
                 </ul>
             </div>
             <div>
-                <div class="font-black text-slate-700 mb-1">➕ 記帳</div>
+                <div class="font-black text-slate-800 mb-1">➕ 記帳</div>
                 <ul class="space-y-1 text-slate-500">
                     <li>• 支援收入 / 支出兩種類型</li>
                     <li>• 支出可選擇現金或信用卡</li>
@@ -67,14 +67,14 @@
                 </ul>
             </div>
             <div>
-                <div class="font-black text-slate-700 mb-1">💳 項目管理</div>
+                <div class="font-black text-slate-800 mb-1">💳 項目管理</div>
                 <ul class="space-y-1 text-slate-500">
                     <li>• 新增 / 編輯信用卡資料（銀行、末四碼、結帳日）</li>
                     <li>• 查看所有分期計畫與繳款進度</li>
                 </ul>
             </div>
             <div class="bg-slate-50 rounded-2xl p-3">
-                <div class="font-black text-slate-700 mb-1">💡 小提示</div>
+                <div class="font-black text-slate-800 mb-1">💡 小提示</div>
                 <ul class="space-y-1 text-slate-500">
                     <li>• 分期金額會自動依結帳日計算至月預算</li>
                     <li>• 支出分類數字與月預算「已用」對應一致</li>
@@ -109,7 +109,7 @@
         <!-- month nav + budget setting -->
         <div class="flex items-center justify-between px-1">
             <button id="dash-prev" class="w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm text-slate-500 text-lg">‹</button>
-            <span id="dash-month" class="font-black text-slate-700"></span>
+            <span id="dash-month" class="font-black text-slate-800"></span>
             <button id="dash-next" class="w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm text-slate-500 text-lg">›</button>
         </div>
 
@@ -152,13 +152,13 @@
 
         <!-- chart -->
         <div class="bg-white rounded-3xl p-5 shadow-sm border border-black/5">
-            <div class="text-sm font-black text-slate-600 mb-3">近 6 個月</div>
+            <div class="text-sm font-black text-slate-800 mb-3">近 6 個月</div>
             <canvas id="dash-chart"></canvas>
         </div>
 
         <!-- category breakdown -->
         <div class="bg-white rounded-3xl p-5 shadow-sm border border-black/5">
-            <div class="text-sm font-black text-slate-600 mb-3">本月支出分類</div>
+            <div class="text-sm font-black text-slate-800 mb-3">本月支出分類</div>
             <div id="dash-categories" class="space-y-2"></div>
         </div>
 
@@ -169,7 +169,7 @@
 
         <!-- add form -->
         <div id="log-form-card" class="bg-white rounded-3xl p-5 shadow-sm border border-black/5 space-y-4">
-            <h2 id="log-form-title" class="text-base font-black text-slate-700">新增紀錄</h2>
+            <h2 id="log-form-title" class="text-base font-black text-slate-800">新增紀錄</h2>
 
             <!-- type toggle -->
             <div class="flex gap-2">
@@ -235,13 +235,13 @@
             <div>
                 <label id="log-category-label" class="text-[10px] text-slate-400 mb-1 block">消費類型</label>
                 <div id="category-chips" class="flex flex-wrap gap-1.5 mb-2">
-                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-slate-200 text-slate-500 hover:border-primary hover:text-primary transition-colors">餐飲</button>
-                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-slate-200 text-slate-500 hover:border-primary hover:text-primary transition-colors">交通</button>
-                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-slate-200 text-slate-500 hover:border-primary hover:text-primary transition-colors">購物</button>
-                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-slate-200 text-slate-500 hover:border-primary hover:text-primary transition-colors">娛樂</button>
-                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-slate-200 text-slate-500 hover:border-primary hover:text-primary transition-colors">醫療</button>
-                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-slate-200 text-slate-500 hover:border-primary hover:text-primary transition-colors">生活費</button>
-                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-slate-200 text-slate-500 hover:border-primary hover:text-primary transition-colors">訂閱</button>
+                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-[#ADC6E5] text-[#1E0F74] hover:border-[#3785D8] hover:text-[#3785D8] transition-colors">餐飲</button>
+                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-[#ADC6E5] text-[#1E0F74] hover:border-[#3785D8] hover:text-[#3785D8] transition-colors">交通</button>
+                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-[#ADC6E5] text-[#1E0F74] hover:border-[#3785D8] hover:text-[#3785D8] transition-colors">購物</button>
+                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-[#ADC6E5] text-[#1E0F74] hover:border-[#3785D8] hover:text-[#3785D8] transition-colors">娛樂</button>
+                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-[#ADC6E5] text-[#1E0F74] hover:border-[#3785D8] hover:text-[#3785D8] transition-colors">醫療</button>
+                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-[#ADC6E5] text-[#1E0F74] hover:border-[#3785D8] hover:text-[#3785D8] transition-colors">生活費</button>
+                    <button type="button" class="category-chip text-xs px-2.5 py-1 rounded-full border border-[#ADC6E5] text-[#1E0F74] hover:border-[#3785D8] hover:text-[#3785D8] transition-colors">訂閱</button>
                 </div>
                 <input type="text" id="log-category" placeholder="餐飲、交通…" list="category-list"
                     class="w-full border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:border-primary" />
@@ -269,10 +269,53 @@
 
         <!-- list -->
         <div class="bg-white rounded-3xl p-5 shadow-sm border border-black/5">
+
+            <!-- search panel -->
+            <div class="mb-4 space-y-2">
+                <div class="relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input id="search-keyword" type="text" placeholder="搜尋分類、地點、備註…"
+                        class="w-full border border-slate-200 rounded-xl pl-8 pr-8 py-2.5 text-sm outline-none focus:border-primary" />
+                    <button id="search-clear-btn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none">×</button>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="relative">
+                        <input type="date" id="search-date-from"
+                            class="w-full border border-slate-200 rounded-xl px-3 py-2 pr-7 text-sm outline-none focus:border-primary" />
+                        <button id="search-date-from-clear" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none">×</button>
+                    </div>
+                    <div class="relative">
+                        <input type="date" id="search-date-to"
+                            class="w-full border border-slate-200 rounded-xl px-3 py-2 pr-7 text-sm outline-none focus:border-primary" />
+                        <button id="search-date-to-clear" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none">×</button>
+                    </div>
+                </div>
+                <div class="relative">
+                    <input id="search-payment" type="text" readonly placeholder="所有付款方式"
+                        aria-label="選擇付款方式，可多選"
+                        class="w-full border border-slate-200 rounded-xl px-3 py-2.5 pr-9 text-sm outline-none focus:border-primary bg-white cursor-pointer" />
+                    <button id="search-payment-clear" type="button" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none" aria-label="清除付款方式">×</button>
+                    <div id="search-payment-options" class="hidden absolute z-20 left-0 right-0 mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg"></div>
+                </div>
+            </div>
+
+            <!-- month nav -->
             <div class="flex items-center justify-between mb-4">
-                <button id="log-prev" class="w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 text-slate-500">‹</button>
-                <span id="log-month" class="text-sm font-black text-slate-600"></span>
-                <button id="log-next" class="w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 text-slate-500">›</button>
+                <!-- browse mode -->
+                <div id="log-month-browse" class="flex items-center justify-between w-full">
+                    <button id="log-prev" class="w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 text-slate-500">‹</button>
+                    <span id="log-month" class="text-sm font-black text-slate-800"></span>
+                    <button id="log-next" class="w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 text-slate-500">›</button>
+                </div>
+                <!-- search mode -->
+                <div id="log-month-search" class="hidden items-center justify-between w-full">
+                    <span class="text-sm font-black text-slate-800">搜尋結果</span>
+                    <div class="flex items-center gap-2 text-xs">
+                        <span id="search-result-count" class="text-slate-400"></span>
+                        <span id="search-result-total" class="font-bold text-primary"></span>
+                    </div>
+                    <button id="search-reset-btn" class="text-xs text-primary font-bold">× 清除</button>
+                </div>
             </div>
             <div id="log-list" class="hide-scrollbar"></div>
         </div>
@@ -287,26 +330,26 @@
         <!-- tabs -->
         <div class="flex border-b border-slate-200">
             <button id="tab-cards"
-                class="flex-1 py-3 text-sm font-black border-b-2 border-primary text-primary transition-colors">信用卡</button>
+                class="flex-1 py-3 text-sm font-black border-b-2 border-white text-white transition-colors">信用卡</button>
             <button id="tab-installments"
-                class="flex-1 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 transition-colors">分期付款</button>
+                class="flex-1 py-3 text-sm font-bold border-b-2 border-transparent text-white/60 transition-colors">分期付款</button>
         </div>
 
         <!-- 信用卡 section -->
         <div id="cards-section" class="space-y-4">
             <div id="card-form-card" class="bg-white rounded-3xl p-5 shadow-sm border border-black/5 space-y-3">
-                <h3 id="card-form-title" class="text-sm font-black text-slate-700">新增信用卡</h3>
+                <h3 id="card-form-title" class="text-sm font-black text-slate-800">新增信用卡</h3>
                 <div class="grid grid-cols-3 gap-2">
                     <input type="text" id="card-bank" placeholder="銀行名稱"
                         class="border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary" />
-                    <input type="text" id="card-last4" placeholder="末四碼" maxlength="4"
+                    <input type="text" id="card-last4" placeholder="卡片名稱"
                         class="border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary" />
                     <input type="number" id="card-billing" placeholder="結帳日" min="1" max="31"
                         class="border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary" />
                 </div>
                 <div class="flex gap-2">
                     <button id="cancel-card-btn"
-                        class="hidden flex-1 py-2.5 border border-slate-200 text-slate-500 text-sm font-bold rounded-2xl active:scale-95 transition-transform">取消</button>
+                        class="hidden flex-1 py-2.5 bg-slate-600 border border-slate-600 text-white text-sm font-bold rounded-2xl active:scale-95 transition-transform">取消</button>
                     <button id="add-card-btn"
                         class="flex-1 py-2.5 bg-primary text-white text-sm font-bold rounded-2xl active:scale-95 transition-transform">新增信用卡</button>
                 </div>
@@ -325,7 +368,7 @@
 
         <!-- 資料管理 section -->
         <div class="bg-white rounded-3xl p-5 shadow-sm border border-black/5 space-y-4">
-            <div class="text-sm font-black text-slate-600">資料管理</div>
+            <div class="text-sm font-black text-slate-800">資料管理</div>
             <div>
                 <div class="text-xs font-bold text-slate-500 mb-2">匯出</div>
                 <div class="flex gap-2">

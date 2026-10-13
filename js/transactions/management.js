@@ -15,11 +15,11 @@ function updateTabUI() {
     ['cards', 'installments'].forEach(tab => {
         const btn = document.getElementById('tab-' + tab);
         const on  = tab === activeTab;
-        btn.classList.toggle('border-primary', on);
-        btn.classList.toggle('text-primary', on);
+        btn.classList.toggle('border-white', on);
+        btn.classList.toggle('text-white', on);
         btn.classList.toggle('font-black', on);
         btn.classList.toggle('border-transparent', !on);
-        btn.classList.toggle('text-slate-400', !on);
+        btn.classList.toggle('text-white/60', !on);
         btn.classList.toggle('font-bold', !on);
     });
     document.getElementById('cards-section').classList.toggle('hidden', activeTab !== 'cards');
@@ -41,7 +41,7 @@ function renderCards() {
         <div class="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
             <div>
                 <div class="font-medium text-slate-700">${c.bank}</div>
-                <div class="text-sm text-slate-400">**** ${c.lastFour} · 結帳日每月 ${c.billingDay} 號</div>
+                <div class="text-sm text-slate-400">${c.cardName} · 結帳日每月 ${c.billingDay} 號</div>
             </div>
             <div class="flex items-center gap-3">
                 <button class="text-slate-300 hover:text-primary transition-colors edit-card" data-id="${c.id}">
@@ -65,13 +65,13 @@ function renderCards() {
 
 export function addCard() {
     const bank       = document.getElementById('card-bank').value.trim();
-    const lastFour   = document.getElementById('card-last4').value.trim();
+    const cardName   = document.getElementById('card-last4').value.trim();
     const billingDay = parseInt(document.getElementById('card-billing').value);
-    if (!bank || !lastFour || isNaN(billingDay)) return;
+    if (!bank || !cardName || isNaN(billingDay)) return;
 
     if (editingCardId) {
         const card = appData.cards.find(c => c.id === editingCardId);
-        if (card) Object.assign(card, { bank, lastFour, billingDay });
+        if (card) Object.assign(card, { bank, cardName, billingDay });
         saveData();
         resetCardForm();
         renderCards();
@@ -79,7 +79,7 @@ export function addCard() {
         return;
     }
 
-    appData.cards.push({ id: genId(), bank, lastFour, billingDay });
+    appData.cards.push({ id: genId(), bank, cardName, billingDay });
     saveData();
     resetCardForm();
     renderCards();
@@ -91,7 +91,7 @@ function editCard(id) {
     if (!card) return;
     editingCardId = id;
     document.getElementById('card-bank').value    = card.bank;
-    document.getElementById('card-last4').value   = card.lastFour;
+    document.getElementById('card-last4').value   = card.cardName;
     document.getElementById('card-billing').value = card.billingDay;
     document.getElementById('card-form-title').textContent = '編輯信用卡';
     const btn = document.getElementById('add-card-btn');
@@ -182,7 +182,7 @@ function renderInstallments() {
 
     el.innerHTML = deduped.map(inst => {
         const card = appData.cards.find(c => c.id === inst.cardId);
-        const cardName = card ? `${card.bank} ****${card.lastFour}` : '未知卡片';
+        const cardName = card ? `${card.bank} ${card.cardName}` : '未知卡片';
         const paid = calcAutoPaid(inst, card);
         const done = paid >= inst.months;
         const pct  = Math.round(paid / inst.months * 100);
