@@ -6,6 +6,8 @@ import { cardLabel } from './card.js';
 
 let logMonth = new Date().toLocaleDateString('sv').slice(0, 7);
 let editingId = null;
+let logView = 'browse';
+let appliedSearch = null;
 
 export function renderLog() {
     refreshCardSelect();
@@ -13,8 +15,36 @@ export function renderLog() {
     refreshDatalist('location-list',  appData.transactions.map(t => t.location).filter(Boolean));
     refreshLocationChips();
     refreshCategoryChips();
-    renderLogList();
+    renderActiveList();
     renderInstallmentDue();
+}
+
+function updateLogView() {
+    const searching = logView === 'search';
+    document.getElementById('log-form-card').classList.toggle('hidden', searching && !editingId);
+    document.getElementById('log-search-panel').classList.toggle('hidden', !searching);
+    document.getElementById('log-month-browse').classList.toggle('hidden', searching);
+    document.getElementById('log-month-search').classList.toggle('hidden', !searching);
+    document.getElementById('log-month-search').classList.toggle('flex', searching);
+    if (searching) document.getElementById('log-installment-due').classList.add('hidden');
+}
+
+export function openLogSearch() {
+    logView = 'search';
+    renderActiveList();
+}
+
+export function closeLogSearch() {
+    if (editingId) resetLogForm();
+    logView = 'browse';
+    renderActiveList();
+    renderInstallmentDue();
+}
+
+function renderActiveList() {
+    updateLogView();
+    if (logView === 'search') renderSearchResults();
+    else renderLogList();
 }
 
 const PRESET_CATEGORIES = new Set(['餐飲', '交通', '購物', '娛樂', '醫療', '生活費', '訂閱']);
@@ -120,13 +150,11 @@ export function togglePaymentSearch(id) {
     else searchState.paymentIds.splice(index, 1);
     renderPaymentSearch();
     document.getElementById('search-payment-options')?.classList.remove('hidden');
-    applySearch();
 }
 
 export function clearPaymentSearch() {
     searchState.paymentIds = [];
     renderPaymentSearch();
-    applySearch();
 }
 
 export function updatePaymentUI() {
@@ -142,27 +170,21 @@ export function toggleInstallmentSection() {
 
 export const searchState = { keyword: '', dateFrom: '', dateTo: '', paymentIds: [] };
 
-function isSearchActive() {
-    return !!(searchState.keyword || searchState.dateFrom || searchState.dateTo || searchState.paymentIds.length);
+export function applySearch() {
+    appliedSearch = { ...searchState, keyword: searchState.keyword.trim(), paymentIds: [...searchState.paymentIds] };
+    logView = 'search';
+    renderActiveList();
 }
 
-export function applySearch() {
-    const active = isSearchActive();
-    document.getElementById('search-clear-btn')?.classList.toggle('hidden', !searchState.keyword);
-    document.getElementById('log-month-browse')?.classList.toggle('hidden', active);
-    const searchBar = document.getElementById('log-month-search');
-    if (searchBar) {
-        searchBar.classList.toggle('hidden', !active);
-        searchBar.classList.toggle('flex', active);
-    }
-
-    if (!active) {
-        document.getElementById('search-result-total')?.replaceChildren();
-        renderLogList();
+function renderSearchResults() {
+    if (!appliedSearch) {
+        document.getElementById('search-result-count').textContent = '';
+        document.getElementById('search-result-total').textContent = '';
+        document.getElementById('log-list').innerHTML = '<p class="text-sm text-slate-400 text-center py-6">輸入條件後按搜尋</p>';
         return;
     }
 
-    const { keyword, dateFrom, dateTo, paymentIds } = searchState;
+    const { keyword, dateFrom, dateTo, paymentIds } = appliedSearch;
     let txs = [...appData.transactions];
     if (keyword) {
         const terms = keyword.toLowerCase().split(/\s+/).filter(Boolean);
@@ -184,7 +206,7 @@ export function applySearch() {
             const amount = Number(tx.amount) || 0;
             return sum + (tx.type === 'income' ? amount : -amount);
         }, 0);
-        total.textContent = `合計 ${balance >= 0 ? '+' : '-'}$${Math.abs(balance).toLocaleString()}`;
+        total.textContent = `合計 ${balance > 0 ? '+' : balance < 0 ? '-' : ''}$${Math.abs(balance).toLocaleString()}`;
     }
     renderTxList(txs, true);
 }
@@ -390,13 +412,13 @@ function editTx(id) {
     const card = document.getElementById('log-form-card');
     card.classList.replace('bg-white', 'bg-white/50');
     card.classList.replace('border-black/5', 'border-[#5B4885]/30');
+    updateLogView();
     card.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function deleteTx(id) {
     appData.transactions = appData.transactions.filter(t => t.id !== id);
     saveData();
-    renderLogList();
     document.dispatchEvent(new CustomEvent('app:update'));
 }
 
@@ -422,6 +444,7 @@ function resetLogForm() {
     setTransactionType('expense');
     document.getElementById('pay-cash').checked = true;
     updatePaymentUI();
+    updateLogView();
 }
 
 export function cancelEdit() {
@@ -456,14 +479,14 @@ export function setTransactionType(type) {
 export function prevLogMonth() {
     const [y, m] = logMonth.split('-').map(Number);
     logMonth = new Date(y, m - 2, 1).toLocaleDateString('sv').slice(0, 7);
-    renderLogList();
+    renderActiveList();
     renderInstallmentDue();
 }
 
 export function nextLogMonth() {
     const [y, m] = logMonth.split('-').map(Number);
     logMonth = new Date(y, m, 1).toLocaleDateString('sv').slice(0, 7);
-    renderLogList();
+    renderActiveList();
     renderInstallmentDue();
 }
 
@@ -487,6 +510,7 @@ function getInstallmentBillingInMonth(inst, card, month) {
 function renderInstallmentDue() {
     const el = document.getElementById('log-installment-due');
     if (!el) return;
+    if (logView === 'search') { el.classList.add('hidden'); return; }
 
     const today = new Date();
     const dues = [];

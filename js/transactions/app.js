@@ -2,7 +2,7 @@ import { loadData } from './data.js';
 import { appData } from './state.js';
 import { switchPage, closeModal } from './ui.js';
 import { renderDashboard, prevMonth, nextMonth, saveBudget, getViewMonth } from './dashboard.js';
-import { renderLog, addTransaction, setTransactionType, updatePaymentUI, toggleInstallmentSection, prevLogMonth, nextLogMonth, cancelEdit, applySearch, searchState, renderPaymentSearch, togglePaymentSearch, clearPaymentSearch } from './log.js';
+import { renderLog, addTransaction, setTransactionType, updatePaymentUI, toggleInstallmentSection, prevLogMonth, nextLogMonth, cancelEdit, applySearch, openLogSearch, closeLogSearch, searchState, renderPaymentSearch, togglePaymentSearch, clearPaymentSearch } from './log.js';
 import { renderManagement, switchTab, addCard, cancelCardEdit } from './management.js';
 import { exportJSON, exportCSV, handleImportFile } from './dataManagement.js';
 
@@ -86,10 +86,17 @@ function bindEvents() {
         searchState.keyword  = document.getElementById('search-keyword').value;
         searchState.dateFrom = document.getElementById('search-date-from').value;
         searchState.dateTo   = document.getElementById('search-date-to').value;
+        document.getElementById('search-clear-btn').classList.toggle('hidden', !searchState.keyword);
         document.getElementById('search-date-from-clear').classList.toggle('hidden', !searchState.dateFrom);
         document.getElementById('search-date-to-clear').classList.toggle('hidden', !searchState.dateTo);
-        applySearch();
     }
+    document.getElementById('log-search-open').addEventListener('click', openLogSearch);
+    document.getElementById('log-search-back').addEventListener('click', closeLogSearch);
+    document.getElementById('log-search-panel').addEventListener('submit', e => {
+        e.preventDefault();
+        syncSearch();
+        applySearch();
+    });
     document.getElementById('search-keyword').addEventListener('input', syncSearch);
     document.getElementById('search-date-from').addEventListener('change', syncSearch);
     document.getElementById('search-date-to').addEventListener('change', syncSearch);
@@ -108,7 +115,6 @@ function bindEvents() {
         e.preventDefault();
         togglePaymentSearch(option.dataset.paymentId);
         paymentOptions.classList.remove('hidden');
-        document.getElementById('search-payment-clear').classList.remove('hidden');
     });
     const paymentClear = document.getElementById('search-payment-clear');
     const clearSelectedPayments = e => {
@@ -131,7 +137,6 @@ function bindEvents() {
         document.getElementById('search-date-from').value = '';
         document.getElementById('search-date-to').value = '';
         clearPaymentSearch();
-        document.getElementById('search-payment-clear').classList.add('hidden');
         syncSearch();
     });
     document.getElementById('search-date-from-clear').addEventListener('click', () => {

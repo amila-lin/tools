@@ -271,23 +271,30 @@
         <div class="bg-white rounded-3xl p-5 shadow-sm border border-black/5">
 
             <!-- search panel -->
-            <div class="mb-4 space-y-2">
+            <form id="log-search-panel" class="hidden mb-4 space-y-2">
+                <button id="log-search-back" type="button" class="py-1 text-sm font-bold text-primary">‹ 返回紀錄</button>
                 <div class="relative">
                     <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input id="search-keyword" type="text" placeholder="搜尋分類、地點、備註…"
+                    <input id="search-keyword" type="text" enterkeyhint="search" placeholder="搜尋分類、地點、備註…"
                         class="w-full border border-slate-200 rounded-xl pl-8 pr-8 py-2.5 text-sm outline-none focus:border-primary" />
-                    <button id="search-clear-btn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none">×</button>
+                    <button id="search-clear-btn" type="button" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none" aria-label="清除關鍵字">×</button>
                 </div>
-                <div class="grid grid-cols-2 gap-2 min-w-0">
-                    <div class="relative min-w-0">
-                        <input type="date" id="search-date-from"
-                            class="block w-full min-w-0 border border-slate-200 rounded-xl px-3 py-2 pr-7 text-sm outline-none focus:border-primary" />
-                        <button id="search-date-from-clear" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none">×</button>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 min-w-0">
+                    <div class="min-w-0">
+                        <label for="search-date-from" class="block text-xs text-slate-500 mb-1">開始日期</label>
+                        <div class="relative">
+                            <input type="date" id="search-date-from"
+                                class="search-date-input block w-full min-w-0 border border-slate-200 rounded-xl px-3 py-2 pr-7 text-sm outline-none focus:border-primary" />
+                            <button id="search-date-from-clear" type="button" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none" aria-label="清除開始日期">×</button>
+                        </div>
                     </div>
-                    <div class="relative min-w-0">
-                        <input type="date" id="search-date-to"
-                            class="block w-full min-w-0 border border-slate-200 rounded-xl px-3 py-2 pr-7 text-sm outline-none focus:border-primary" />
-                        <button id="search-date-to-clear" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none">×</button>
+                    <div class="min-w-0">
+                        <label for="search-date-to" class="block text-xs text-slate-500 mb-1">結束日期</label>
+                        <div class="relative">
+                            <input type="date" id="search-date-to"
+                                class="search-date-input block w-full min-w-0 border border-slate-200 rounded-xl px-3 py-2 pr-7 text-sm outline-none focus:border-primary" />
+                            <button id="search-date-to-clear" type="button" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none" aria-label="清除結束日期">×</button>
+                        </div>
                     </div>
                 </div>
                 <div class="relative">
@@ -297,24 +304,28 @@
                     <button id="search-payment-clear" type="button" class="hidden absolute z-10 right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none" aria-label="清除付款方式">×</button>
                     <div id="search-payment-options" class="hidden absolute z-20 left-0 right-0 mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg"></div>
                 </div>
-            </div>
+                <div class="flex gap-2 pt-1">
+                    <button id="search-reset-btn" type="button" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm">清除條件</button>
+                    <button id="search-submit-btn" type="submit" class="flex-1 py-2.5 rounded-xl bg-primary text-white text-sm font-bold">搜尋</button>
+                </div>
+            </form>
 
             <!-- month nav -->
-            <div class="flex items-center justify-between mb-4">
-                <!-- browse mode -->
-                <div id="log-month-browse" class="flex items-center justify-between w-full">
-                    <button id="log-prev" class="w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 text-slate-500">‹</button>
-                    <span id="log-month" class="text-sm font-black text-slate-800"></span>
-                    <button id="log-next" class="w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 text-slate-500">›</button>
+            <div class="mb-4">
+                <div id="log-month-browse">
+                    <div class="flex items-center justify-between">
+                        <button id="log-prev" type="button" class="w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 text-slate-500">‹</button>
+                        <span id="log-month" class="text-sm font-black text-slate-800"></span>
+                        <button id="log-next" type="button" class="w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 text-slate-500">›</button>
+                    </div>
+                    <button id="log-search-open" type="button" class="mt-2 w-full py-2 text-sm font-bold text-primary text-center rounded-xl border border-slate-200">搜尋紀錄</button>
                 </div>
-                <!-- search mode -->
-                <div id="log-month-search" class="hidden items-center justify-between w-full">
+                <div id="log-month-search" class="hidden items-center justify-between gap-2">
                     <span class="text-sm font-black text-slate-800">搜尋結果</span>
-                    <div class="flex items-center gap-2 text-xs">
-                        <span id="search-result-count" class="text-slate-400"></span>
+                    <div class="flex flex-col items-end text-xs">
+                        <span id="search-result-count" class="text-slate-500"></span>
                         <span id="search-result-total" class="font-bold text-primary"></span>
                     </div>
-                    <button id="search-reset-btn" class="text-xs text-primary font-bold">× 清除</button>
                 </div>
             </div>
             <div id="log-list" class="hide-scrollbar"></div>
