@@ -169,10 +169,6 @@ function bindEvents() {
         goToPage(location.hash.slice(1));
     });
 
-    // iOS viewport drift fix
-    document.addEventListener('focusout', () => {
-        if (/iPhone|iPad|iPod/.test(navigator.userAgent)) window.scrollTo(0, 0);
-    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {

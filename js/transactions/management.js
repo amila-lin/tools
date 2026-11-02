@@ -1,6 +1,8 @@
 import { appData, genId } from './state.js';
 import { saveData } from './data.js';
 import { openModal } from './ui.js';
+import { escapeHTML } from './html.js';
+import { cardBank, cardName, cardLabel } from './card.js';
 
 let activeTab = 'cards';
 let editingCardId = null;
@@ -40,14 +42,14 @@ function renderCards() {
     el.innerHTML = appData.cards.map(c => `
         <div class="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
             <div>
-                <div class="font-medium text-slate-700">${c.bank}</div>
-                <div class="text-sm text-slate-400">${c.cardName} · 結帳日每月 ${c.billingDay} 號</div>
+                <div class="font-medium text-slate-700">${escapeHTML(cardBank(c))}</div>
+                <div class="text-sm text-slate-400">${escapeHTML(cardName(c))} · 結帳日每月 ${escapeHTML(c.billingDay)} 號</div>
             </div>
             <div class="flex items-center gap-3">
-                <button class="text-slate-300 hover:text-primary transition-colors edit-card" data-id="${c.id}">
+                <button class="text-slate-300 hover:text-primary transition-colors edit-card" data-id="${escapeHTML(c.id)}">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
-                <button class="text-slate-300 hover:text-expense transition-colors delete-card" data-id="${c.id}">
+                <button class="text-slate-300 hover:text-expense transition-colors delete-card" data-id="${escapeHTML(c.id)}">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                 </button>
             </div>
@@ -159,7 +161,7 @@ function buildBillingRows(inst, card) {
         const isPaid = billingDate ? billingDate <= today : false;
         const dateStr = billingDate ? billingDate.toLocaleDateString('sv') : '—';
         return `<div class="flex items-center justify-between text-xs py-1">
-            <span class="text-slate-400">第 ${i + 1} 期 · ${dateStr}</span>
+            <span class="text-slate-400">第 ${i + 1} 期 · ${escapeHTML(dateStr)}</span>
             <span class="${isPaid ? 'text-income font-bold' : 'text-slate-300'}">${isPaid ? '已繳 ✓' : '待繳'}</span>
         </div>`;
     }).join('');
@@ -182,7 +184,7 @@ function renderInstallments() {
 
     el.innerHTML = deduped.map(inst => {
         const card = appData.cards.find(c => c.id === inst.cardId);
-        const cardName = card ? `${card.bank} ${card.cardName}` : '未知卡片';
+        const cardDisplay = cardLabel(card);
         const paid = calcAutoPaid(inst, card);
         const done = paid >= inst.months;
         const pct  = Math.round(paid / inst.months * 100);
@@ -191,11 +193,11 @@ function renderInstallments() {
             <div class="flex items-start justify-between gap-2">
                 <div class="flex-1 min-w-0">
                     <div class="flex items-baseline gap-2">
-                        <div class="font-medium text-slate-700 truncate">${inst.desc}</div>
-                        <div class="text-xs text-slate-400 shrink-0">${inst.startDate}</div>
+                        <div class="font-medium text-slate-700 truncate">${escapeHTML(inst.desc)}</div>
+                        <div class="text-xs text-slate-400 shrink-0">${escapeHTML(inst.startDate)}</div>
                     </div>
-                    <div class="text-xs text-slate-400 mt-0.5">${cardName} · 共 ${inst.months} 期 · 每期 $${inst.monthlyAmount.toLocaleString()}</div>
-                    <div class="text-xs text-slate-400">總額 $${inst.totalAmount.toLocaleString()} · 已繳 ${paid} 期${done ? ' ✓ 已還清' : ` · 剩 ${inst.months - paid} 期`}</div>
+                    <div class="text-xs text-slate-400 mt-0.5">${escapeHTML(cardDisplay)} · 共 ${escapeHTML(inst.months)} 期 · 每期 $${escapeHTML(inst.monthlyAmount.toLocaleString())}</div>
+                    <div class="text-xs text-slate-400">總額 $${escapeHTML(inst.totalAmount.toLocaleString())} · 已繳 ${escapeHTML(paid)} 期${done ? ' ✓ 已還清' : ` · 剩 ${inst.months - paid} 期`}</div>
                     <div class="mt-2 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                         <div class="h-1.5 ${done ? 'bg-income' : 'bg-primary'} rounded-full transition-all" style="width:${pct}%"></div>
                     </div>

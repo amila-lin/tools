@@ -1,6 +1,8 @@
 import { appData, genId } from './state.js';
 import { saveData } from './data.js';
 import { openModal } from './ui.js';
+import { escapeHTML } from './html.js';
+import { cardLabel } from './card.js';
 
 let logMonth = new Date().toLocaleDateString('sv').slice(0, 7);
 let editingId = null;
@@ -20,7 +22,7 @@ const PRESET_CATEGORIES = new Set(['餐飲', '交通', '購物', '娛樂', '醫�
 function refreshCategoryChips() {
     const el = document.getElementById('category-chips');
     if (!el) return;
-    const freq = {};
+    const freq = Object.create(null);
     appData.transactions.forEach(t => { if (t.category) freq[t.category] = (freq[t.category] || 0) + 1; });
     const custom = Object.entries(freq)
         .filter(([cat]) => !PRESET_CATEGORIES.has(cat))
@@ -41,13 +43,13 @@ function refreshCategoryChips() {
 function refreshLocationChips() {
     const el = document.getElementById('location-chips');
     if (!el) return;
-    const freq = {};
+    const freq = Object.create(null);
     appData.transactions.forEach(t => { if (t.location) freq[t.location] = (freq[t.location] || 0) + 1; });
     const top = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([loc]) => loc);
     if (!top.length) { el.classList.add('hidden'); return; }
     el.classList.remove('hidden');
     el.innerHTML = top.map(loc =>
-        `<button type="button" class="location-chip text-xs px-2.5 py-1 rounded-full border border-[#ADC6E5] text-[#1E0F74] hover:border-[#3785D8] hover:text-[#3785D8] transition-colors">${loc}</button>`
+        `<button type="button" class="location-chip text-xs px-2.5 py-1 rounded-full border border-[#ADC6E5] text-[#1E0F74] hover:border-[#3785D8] hover:text-[#3785D8] transition-colors">${escapeHTML(loc)}</button>`
     ).join('');
     el.querySelectorAll('.location-chip').forEach(chip => {
         chip.addEventListener('click', () => {
@@ -60,7 +62,7 @@ function refreshDatalist(id, values) {
     const dl = document.getElementById(id);
     if (!dl) return;
     const unique = [...new Set(values)];
-    dl.innerHTML = unique.map(v => `<option value="${v}">`).join('');
+    dl.innerHTML = unique.map(v => `<option value="${escapeHTML(v)}">`).join('');
 }
 
 function refreshCardSelect() {
@@ -69,7 +71,7 @@ function refreshCardSelect() {
     if (!sel) return;
     const instLabel = document.getElementById('log-installment-toggle-label');
     if (appData.cards.length) {
-        sel.innerHTML = appData.cards.map(c => `<option value="${c.id}">${c.bank} ${c.cardName}</option>`).join('');
+        sel.innerHTML = appData.cards.map(c => `<option value="${escapeHTML(c.id)}">${escapeHTML(cardLabel(c))}</option>`).join('');
         sel.classList.remove('hidden');
         if (warn) warn.classList.add('hidden');
         if (instLabel) instLabel.classList.remove('hidden');
@@ -87,7 +89,7 @@ function refreshCardSelect() {
 function paymentOptions() {
     return [
         { id: 'cash', label: '現金' },
-        ...appData.cards.map(card => ({ id: card.id, label: `${card.bank} ${card.cardName}` }))
+        ...appData.cards.map(card => ({ id: card.id, label: cardLabel(card) }))
     ];
 }
 
@@ -106,8 +108,8 @@ export function renderPaymentSearch() {
     document.getElementById('search-payment-clear')?.classList.toggle('hidden', !searchState.paymentIds.length);
     menu.innerHTML = options.map(option => {
         const selected = searchState.paymentIds.includes(option.id);
-        return `<button type="button" class="search-payment-option w-full text-left px-3 py-2 text-sm hover:bg-slate-50 ${selected ? 'bg-primary/10 text-primary font-bold' : 'text-slate-700'}" data-payment-id="${option.id}">
-            ${selected ? '✓ ' : ''}${option.label}
+        return `<button type="button" class="search-payment-option w-full text-left px-3 py-2 text-sm hover:bg-slate-50 ${selected ? 'bg-primary/10 text-primary font-bold' : 'text-slate-700'}" data-payment-id="${escapeHTML(option.id)}">
+            ${selected ? '✓ ' : ''}${escapeHTML(option.label)}
         </button>`;
     }).join('');
 }
@@ -174,7 +176,6 @@ export function applySearch() {
     if (paymentIds.length) {
         txs = txs.filter(t => paymentIds.includes(t.paymentMethod));
     }
-    txs.sort((a, b) => b.date.localeCompare(a.date));
     const count = document.getElementById('search-result-count');
     const total = document.getElementById('search-result-total');
     if (count) count.textContent = `共 ${txs.length} 筆`;
@@ -190,9 +191,7 @@ export function applySearch() {
 
 function renderLogList() {
     document.getElementById('log-month').textContent = logMonth;
-    const txs = appData.transactions
-        .filter(t => t.date.startsWith(logMonth))
-        .sort((a, b) => b.date.localeCompare(a.date));
+    const txs = appData.transactions.filter(t => t.date.startsWith(logMonth));
     renderTxList(txs, false);
 }
 
@@ -202,43 +201,55 @@ function renderTxList(txs, isSearch) {
         el.innerHTML = `<p class="text-sm text-slate-400 text-center py-6">${isSearch ? '找不到符合的紀錄' : '本月無紀錄'}</p>`;
         return;
     }
-    // group by date
+    // Same-day records follow insertion order; the most recently added is first.
+    const order = new Map(appData.transactions.map((t, index) => [t, index]));
+    const sorted = [...txs].sort((a, b) =>
+        b.date.localeCompare(a.date) || (order.get(b) ?? -1) - (order.get(a) ?? -1)
+    );
+    const dailyExpenses = new Map();
+    sorted.forEach(t => {
+        if (t.type !== 'expense') return;
+        const amount = Number(t.amount);
+        if (Number.isFinite(amount)) dailyExpenses.set(t.date, (dailyExpenses.get(t.date) || 0) + amount);
+    });
     const rows = [];
     let lastDate = null;
-    txs.forEach(t => {
+    sorted.forEach(t => {
         if (t.date !== lastDate) {
             const date = new Date(`${t.date}T00:00:00`);
             const weekday = ['日', '一', '二', '三', '四', '五', '六'][date.getDay()];
+            const expense = dailyExpenses.get(t.date) || 0;
             rows.push(`<div class="flex items-center gap-2 mt-5 first:mt-1 mb-2">
-                <span class="h-px flex-1 bg-[#ADC6E5]/30"></span>
-                <span class="rounded-full bg-[#ADC6E5]/20 px-3 py-1 text-xs font-bold whitespace-nowrap" style="color:#7098C2">${t.date.replaceAll('-', '/')}（${weekday}）</span>
-                <span class="h-px flex-1 bg-[#ADC6E5]/30"></span>
+                <span class="rounded-full bg-[#ADC6E5]/20 px-3 py-1 text-xs font-bold whitespace-nowrap" style="color:#7098C2">${escapeHTML(t.date.replaceAll('-', '/'))}（${weekday}）</span>
+                <span class="h-px flex-1 min-w-0 bg-[#ADC6E5]/30"></span>
+                <span class="text-xs whitespace-nowrap shrink-0" style="color:#dc2626">當日支出 $${escapeHTML(expense.toLocaleString())}</span>
             </div>`);
             lastDate = t.date;
         }
         const card = appData.cards.find(c => c.id === t.paymentMethod);
-        const payLabel = card ? `${card.bank} ${card.cardName}` : '現金';
-        const instText = t.installments > 1 ? ` · ${t.installments}期` : '';
         const isIncome = t.type === 'income';
+        const isCard = !isIncome && t.paymentMethod !== 'cash';
+        const payLabel = isCard ? cardLabel(card) : '現金';
         const sign     = isIncome ? '+' : '-';
         const amtColor = isIncome ? '#3785D8' : '#5B4885';
         const badgeBg  = isIncome ? 'background:#ADC6E5;color:#1E0F74' : 'background:#C8C2ED;color:#5B4885';
         const typeLabel = isIncome ? '收入' : '支出';
-        const sub = [payLabel + instText, t.note ? `${t.note}` : ''].filter(Boolean).join(' · ');
+        const sub = [payLabel + (t.installments > 1 ? ` · ${t.installments}期` : ''), t.note || ''].filter(Boolean).join(' · ');
+        const cardIcon = isCard ? '<svg aria-hidden="true" class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>' : '';
         rows.push(`<div class="flex items-start justify-between py-2.5 border-b border-[#ADC6E5]/20 last:border-0 gap-3">
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-1.5 mb-0.5">
-                    <span class="text-sm font-bold truncate" style="color:#1E0F74">${t.category || '未分類'}${t.location ? ' · ' + t.location : ''}</span>
+                    <span class="text-sm font-bold truncate" style="color:#1E0F74">${escapeHTML(t.category || '未分類')}${t.location ? ' · ' + escapeHTML(t.location) : ''}</span>
                     <span class="text-[10px] px-1.5 py-0.5 rounded-full shrink-0" style="${badgeBg}">${typeLabel}</span>
                 </div>
-                <div class="text-xs truncate" style="color:#88AACA">${sub}</div>
+                <div class="flex items-center gap-1 text-xs min-w-0" style="color:#88AACA">${cardIcon}<span class="min-w-0 truncate">${escapeHTML(sub)}</span></div>
             </div>
             <div class="flex items-center gap-2.5 shrink-0 mt-0.5">
-                <span class="text-sm font-bold" style="color:${amtColor}">${sign}$${t.amount.toLocaleString()}</span>
-                <button class="edit-tx" data-id="${t.id}" style="color:#ADC6E5">
+                <span class="text-sm font-bold" style="color:${amtColor}">${sign}$${escapeHTML(t.amount.toLocaleString())}</span>
+                <button class="edit-tx" data-id="${escapeHTML(t.id)}" style="color:#ADC6E5">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 hover:opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
-                <button class="delete-tx" data-id="${t.id}" style="color:#ADC6E5">
+                <button class="delete-tx" data-id="${escapeHTML(t.id)}" style="color:#ADC6E5">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 hover:opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                 </button>
             </div>
@@ -491,18 +502,18 @@ function renderInstallmentDue() {
     el.innerHTML = `
         <div class="text-sm font-black text-slate-600 mb-3">本月分期（${dues.length}筆）</div>
         ${dues.map(({ inst, card, hit }) => {
-            const cardName = card ? `${card.bank} ${card.cardName}` : '未知卡片';
+            const cardName = cardLabel(card);
             const isPaid = hit.date <= today;
             const dateStr = hit.date.toLocaleDateString('sv');
             const statusCls = isPaid ? 'text-income font-bold' : 'text-slate-400';
             const statusTxt = isPaid ? '已繳 ✓' : '待繳';
             return `<div class="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
                 <div class="flex-1 min-w-0">
-                    <div class="text-sm font-medium text-slate-700 truncate">${inst.desc}</div>
-                    <div class="text-xs text-slate-400 mt-0.5">${cardName} · 第 ${hit.period}/${inst.months} 期 · 結帳日 ${dateStr}</div>
+                    <div class="text-sm font-medium text-slate-700 truncate">${escapeHTML(inst.desc)}</div>
+                    <div class="text-xs text-slate-400 mt-0.5">${escapeHTML(cardName)} · 第 ${hit.period}/${escapeHTML(inst.months)} 期 · 結帳日 ${escapeHTML(dateStr)}</div>
                 </div>
                 <div class="flex items-center gap-3 ml-2 shrink-0">
-                    <span class="text-base font-bold text-expense">-$${inst.monthlyAmount.toLocaleString()}</span>
+                    <span class="text-base font-bold text-expense">-$${escapeHTML(inst.monthlyAmount.toLocaleString())}</span>
                     <span class="text-xs ${statusCls}">${statusTxt}</span>
                 </div>
             </div>`;

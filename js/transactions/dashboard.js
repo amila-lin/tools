@@ -1,5 +1,7 @@
 import { appData } from './state.js';
 import { saveData } from './data.js';
+import { escapeHTML } from './html.js';
+import { cardLabel } from './card.js';
 
 let chart = null;
 let viewMonth = new Date().toLocaleDateString('sv').slice(0, 7);
@@ -126,7 +128,7 @@ function renderChart() {
 function renderCategories() {
     const instTxIds = new Set(appData.installments.map(i => i.txId).filter(Boolean));
     const txs = txInMonth(viewMonth).filter(t => t.type === 'expense' && !instTxIds.has(t.id));
-    const map = {};
+    const map = Object.create(null);
     txs.forEach(t => { const k = t.category || '其他'; map[k] = (map[k] || 0) + t.amount; });
 
     const instKeys = new Set();
@@ -169,13 +171,13 @@ function renderCategories() {
         const rows = visible.map(([cat, amt]) => {
             const pct = total ? Math.round(amt / total * 100) : 0;
             const badge = instKeys.has(cat) ? `<span class="text-[9px] px-1 py-0.5 rounded bg-primary/10 text-primary font-bold shrink-0">分期</span>` : '';
-            return `<div class="cat-detail-row flex items-center gap-2 cursor-pointer hover:bg-slate-50 -mx-1 px-1 rounded-xl transition-colors" data-cat="${cat}" data-inst="${instKeys.has(cat)}">
-                <span class="text-sm w-20 shrink-0 truncate text-slate-600">${cat}</span>
+            return `<div class="cat-detail-row flex items-center gap-2 cursor-pointer hover:bg-slate-50 -mx-1 px-1 rounded-xl transition-colors" data-cat="${escapeHTML(cat)}" data-inst="${instKeys.has(cat)}">
+                <span class="text-sm w-20 shrink-0 truncate text-slate-600">${escapeHTML(cat)}</span>
                 <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                     <div class="h-1.5 bg-primary rounded-full" style="width:${pct}%"></div>
                 </div>
                 <div class="flex items-center justify-end gap-1 w-20 shrink-0">
-                    ${badge}<span class="text-sm text-slate-500">$${amt.toLocaleString()}</span>
+                    ${badge}<span class="text-sm text-slate-500">$${escapeHTML(amt.toLocaleString())}</span>
                 </div>
             </div>`;
         }).join('');
@@ -227,15 +229,15 @@ function buildCategoryDetailHTML(cat, isInst) {
                 const m = billing.toLocaleDateString('sv').slice(0, 7);
                 if (m === viewMonth) {
                     if (viewMonth !== currentMonth || billing <= today) {
-                        const cardName = `${card.bank} ${card.cardName}`;
+                        const cardName = cardLabel(card);
                         const isPaid = billing <= today;
                         rows.push(`<div class="py-2.5 border-b border-slate-100 last:border-0">
                             <div class="flex items-center justify-between">
-                                <span class="text-sm text-slate-600">${cardName}</span>
-                                <span class="text-sm font-bold text-expense">-$${inst.monthlyAmount.toLocaleString()}</span>
+                                <span class="text-sm text-slate-600">${escapeHTML(cardName)}</span>
+                                <span class="text-sm font-bold text-expense">-$${escapeHTML(inst.monthlyAmount.toLocaleString())}</span>
                             </div>
                             <div class="flex items-center justify-between mt-0.5">
-                                <span class="text-xs text-slate-400">${inst.startDate} · 第 ${count + 1}/${inst.months} 期 · 結帳日 ${billing.toLocaleDateString('sv')}</span>
+                                <span class="text-xs text-slate-400">${escapeHTML(inst.startDate)} · 第 ${count + 1}/${escapeHTML(inst.months)} 期 · 結帳日 ${billing.toLocaleDateString('sv')}</span>
                                 <span class="text-xs ${isPaid ? 'text-income font-bold' : 'text-slate-300'}">${isPaid ? '已繳' : '待繳'}</span>
                             </div>
                         </div>`);
@@ -254,14 +256,14 @@ function buildCategoryDetailHTML(cat, isInst) {
             .sort((a, b) => b.date.localeCompare(a.date));
         if (!txs.length) return '<p class="text-sm text-slate-400 py-2">無資料</p>';
         return txs.map(t => {
-            const loc = t.location ? ` · ${t.location}` : '';
-            const note = t.note ? `<div class="text-xs text-slate-400 italic">${t.note}</div>` : '';
+            const loc = t.location ? ` · ${escapeHTML(t.location)}` : '';
+            const note = t.note ? `<div class="text-xs text-slate-400 italic">${escapeHTML(t.note)}</div>` : '';
             return `<div class="flex items-center justify-between py-2.5 border-b border-slate-100 last:border-0">
                 <div class="flex-1 min-w-0">
-                    <div class="text-sm text-slate-600 truncate">${t.date}${loc}</div>
+                    <div class="text-sm text-slate-600 truncate">${escapeHTML(t.date)}${loc}</div>
                     ${note}
                 </div>
-                <span class="text-sm font-bold text-expense ml-2 shrink-0">-$${t.amount.toLocaleString()}</span>
+                <span class="text-sm font-bold text-expense ml-2 shrink-0">-$${escapeHTML(t.amount.toLocaleString())}</span>
             </div>`;
         }).join('');
     }
@@ -279,7 +281,7 @@ function showCatTooltip(e, cat, isInst) {
     const content = buildCategoryDetailHTML(cat, isInst);
     catTooltipEl = document.createElement('div');
     catTooltipEl.className = 'fixed z-50 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 w-72 pointer-events-none';
-    catTooltipEl.innerHTML = `<div class="text-sm font-black text-slate-700 mb-2">${cat}</div><div>${content}</div>`;
+    catTooltipEl.innerHTML = `<div class="text-sm font-black text-slate-700 mb-2">${escapeHTML(cat)}</div><div>${content}</div>`;
     document.body.appendChild(catTooltipEl);
     positionTooltip(e);
 }
