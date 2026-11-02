@@ -6,7 +6,18 @@ body {
 
 input, select, textarea { font-size: 16px !important; }
 input[type="date"] { min-width: 0; max-width: 100%; }
-.search-date-input { background-color: #fff; box-sizing: border-box; }
+.search-date-field { width: 100%; min-width: 0; overflow: hidden; border-radius: 0.75rem; }
+.search-date-input {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    background-color: #fff;
+    -webkit-appearance: none;
+    appearance: none;
+}
+.search-date-input::-webkit-date-and-time-value { min-width: 0; text-align: left; }
 
 .page-fade {
     animation: fadeIn 0.3s ease;
