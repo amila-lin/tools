@@ -276,7 +276,7 @@
                 <div class="relative">
                     <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     <input id="search-keyword" type="text" enterkeyhint="search" placeholder="搜尋分類、地點、備註…"
-                        class="w-full border border-slate-200 rounded-xl pl-8 pr-8 py-2.5 text-sm outline-none focus:border-primary" />
+                        class="search-text-input w-full border border-slate-200 rounded-xl pl-8 pr-8 text-sm outline-none focus:border-primary" />
                     <button id="search-clear-btn" type="button" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none" aria-label="清除關鍵字">×</button>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 min-w-0">
@@ -284,7 +284,7 @@
                         <label for="search-date-from" class="block text-xs text-slate-500 mb-1">開始日期</label>
                         <div class="search-date-field relative">
                             <input type="date" id="search-date-from"
-                                class="search-date-input block w-full min-w-0 border border-slate-200 rounded-xl px-3 py-2 pr-7 text-sm outline-none focus:border-primary" />
+                                class="search-date-input block w-full min-w-0 px-3 pr-7 text-sm outline-none" />
                             <button id="search-date-from-clear" type="button" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none" aria-label="清除開始日期">×</button>
                         </div>
                     </div>
@@ -292,7 +292,7 @@
                         <label for="search-date-to" class="block text-xs text-slate-500 mb-1">結束日期</label>
                         <div class="search-date-field relative">
                             <input type="date" id="search-date-to"
-                                class="search-date-input block w-full min-w-0 border border-slate-200 rounded-xl px-3 py-2 pr-7 text-sm outline-none focus:border-primary" />
+                                class="search-date-input block w-full min-w-0 px-3 pr-7 text-sm outline-none" />
                             <button id="search-date-to-clear" type="button" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none" aria-label="清除結束日期">×</button>
                         </div>
                     </div>
@@ -300,7 +300,7 @@
                 <div class="relative">
                     <input id="search-payment" type="text" readonly placeholder="所有付款方式"
                         aria-label="選擇付款方式，可多選"
-                        class="block w-full min-w-0 border border-slate-200 rounded-xl px-3 py-2.5 pr-9 text-sm outline-none focus:border-primary bg-white cursor-pointer truncate" />
+                        class="search-text-input block w-full min-w-0 border border-slate-200 rounded-xl px-3 pr-9 text-sm outline-none focus:border-primary bg-white cursor-pointer truncate" />
                     <button id="search-payment-clear" type="button" class="hidden absolute z-10 right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xl leading-none" aria-label="清除付款方式">×</button>
                     <div id="search-payment-options" class="hidden absolute z-20 left-0 right-0 mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg"></div>
                 </div>

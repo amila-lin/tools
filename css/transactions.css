@@ -6,17 +6,36 @@ body {
 
 input, select, textarea { font-size: 16px !important; }
 input[type="date"] { min-width: 0; max-width: 100%; }
-.search-date-field { width: 100%; min-width: 0; overflow: hidden; border-radius: 0.75rem; }
-.search-date-input {
+#log-search-panel .search-date-field {
+    width: 100%;
+    min-width: 0;
+    height: 42px;
+    box-sizing: border-box;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    background-color: #fff;
+}
+#log-search-panel .search-date-field:focus-within { border-color: #2563eb; }
+#log-search-panel .search-date-input,
+#log-search-panel .search-text-input {
     display: block;
     width: 100%;
     min-width: 0;
     max-width: 100%;
+    height: 42px;
     box-sizing: border-box;
-    height: 48px;
     background-color: #fff;
 }
-.search-date-input::-webkit-date-and-time-value { min-width: 0; text-align: left; }
+#log-search-panel .search-date-input {
+    height: 100%;
+    padding-top: 0;
+    padding-bottom: 0;
+    border: 0;
+    border-radius: 0.75rem;
+    outline: none;
+}
+#log-search-panel .search-date-input::-webkit-date-and-time-value { min-width: 0; text-align: left; }
+#log-search-panel .search-date-input::-webkit-datetime-edit { min-width: 0; line-height: 40px; }
 
 .page-fade {
     animation: fadeIn 0.3s ease;
