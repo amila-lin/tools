@@ -82,10 +82,19 @@ function bindEvents() {
     document.getElementById('log-next').addEventListener('click', nextLogMonth);
 
     // Search
+    function updateDateDisplay(id) {
+        const input = document.getElementById(id);
+        const display = document.getElementById(id + '-display');
+        const [year, month, day] = input.value.split('-');
+        display.textContent = input.value ? `${year}年${Number(month)}月${Number(day)}日` : '選擇日期';
+        display.classList.toggle('has-value', !!input.value);
+    }
     function syncSearch() {
         searchState.keyword  = document.getElementById('search-keyword').value;
         searchState.dateFrom = document.getElementById('search-date-from').value;
         searchState.dateTo   = document.getElementById('search-date-to').value;
+        updateDateDisplay('search-date-from');
+        updateDateDisplay('search-date-to');
         document.getElementById('search-clear-btn').classList.toggle('hidden', !searchState.keyword);
         document.getElementById('search-date-from-clear').classList.toggle('hidden', !searchState.dateFrom);
         document.getElementById('search-date-to-clear').classList.toggle('hidden', !searchState.dateTo);
@@ -148,6 +157,7 @@ function bindEvents() {
         syncSearch();
     });
     renderPaymentSearch();
+    syncSearch();
 
     // Management
     document.getElementById('tab-cards').addEventListener('click', () => switchTab('cards'));
